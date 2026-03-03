@@ -3,102 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ClassBot - Edição Final</title>
+    <title>ClassBot v3</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        
-        body { 
-            background-color: #222; 
-            color: #e3e3e3; 
-            font-family: 'Segoe UI', Roboto, sans-serif; 
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .header { 
-            padding: 15px; 
-            font-size: 1.5em; 
-            font-weight: bold; 
-            color: #4facfe; 
-            text-align: center;
-            border-bottom: 1px solid #333;
-            background-color: #222;
-        }
-
-        #chat { 
-            flex: 1; 
-            overflow-y: auto; 
-            padding: 20px; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 15px;
-            background-color: #222;
-        }
-
+        body { background-color: #222; color: #e3e3e3; font-family: sans-serif; height: 100vh; display: flex; flex-direction: column; }
+        .header { padding: 15px; font-size: 1.5em; font-weight: bold; color: #4facfe; text-align: center; border-bottom: 1px solid #333; }
+        #chat { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
         .msg { padding: 12px 16px; border-radius: 18px; max-width: 85%; line-height: 1.5; font-size: 16px; }
         .bot { background: #1a1a1a; align-self: flex-start; border: 1px solid #333; border-bottom-left-radius: 2px; }
-        .user { background: #333; align-self: flex-end; border: 1px solid #444; border-bottom-right-radius: 2px; color: #fff; }
-
-        .loading { font-size: 0.85em; color: #4facfe; text-align: center; padding: 10px; display: none; font-style: italic; }
-
-        /* Barra de Digitar */
-        .input-container {
-            background: #1a1a1a;
-            padding: 15px;
-            border-top: 1px solid #333;
-        }
-
-        .input-area { 
-            background: #333; 
-            border-radius: 25px; 
-            display: flex; 
-            padding: 5px 5px 5px 15px; 
-            border: 1px solid #444;
-            align-items: center;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        input { 
-            flex: 1; 
-            background: transparent; 
-            border: none; 
-            color: white; 
-            padding: 12px 0; 
-            outline: none; 
-            font-size: 16px; 
-        }
-
-        button { 
-            background: #4facfe; 
-            border: none; 
-            color: white; 
-            width: 45px; 
-            height: 45px; 
-            border-radius: 50%; 
-            cursor: pointer;
-            font-size: 1.2em;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-left: 10px;
-        }
+        .user { background: #333; align-self: flex-end; border: 1px solid #444; border-bottom-right-radius: 2px; }
+        .loading { font-size: 0.85em; color: #4facfe; text-align: center; padding: 10px; display: none; }
+        .input-container { background: #1a1a1a; padding: 15px; border-top: 1px solid #333; }
+        .input-area { background: #333; border-radius: 25px; display: flex; padding: 5px 5px 5px 15px; border: 1px solid #444; align-items: center; max-width: 600px; margin: 0 auto; }
+        input { flex: 1; background: transparent; border: none; color: white; padding: 12px 0; outline: none; font-size: 16px; }
+        button { background: #4facfe; border: none; color: white; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 1.2em; display: flex; align-items: center; justify-content: center; margin-left: 10px; }
     </style>
 </head>
 <body>
-
     <div class="header">🤖 ClassBot</div>
-
     <div id="chat">
-        <div class="msg bot">Olá! Eu sou o <b>ClassBot</b>.<br><br>Digite um nome ou assunto abaixo (ex: Alan Turing) e eu vou pesquisar agora mesmo!</div>
+        <div class="msg bot">Olá! Sou o <b>ClassBot</b>. O que vamos pesquisar hoje?</div>
     </div>
-
-    <div id="loader" class="loading">ClassBot está lendo a Wikipedia...</div>
-
+    <div id="loader" class="loading">ClassBot está processando...</div>
     <div class="input-container">
         <div class="input-area">
-            <input type="text" id="pergunta" placeholder="O que deseja saber?" autocomplete="off">
+            <input type="text" id="pergunta" placeholder="Ex: Alan Turing" autocomplete="off">
             <button onclick="buscar()">➤</button>
         </div>
     </div>
@@ -108,51 +37,44 @@
         const input = document.getElementById('pergunta');
         const chat = document.getElementById('chat');
         const loader = document.getElementById('loader');
-        const texto = input.value.trim();
+        let texto = input.value.trim();
 
         if (!texto) return;
 
-        // Adiciona mensagem do usuário na tela
         chat.innerHTML += `<div class="msg user">${texto}</div>`;
         input.value = "";
         loader.style.display = "block";
         chat.scrollTop = chat.scrollHeight;
 
         try {
-            // Busca na API da Wikipedia em Português
-            const queryFormatada = encodeURIComponent(texto);
-            const url = `https://pt.wikipedia.org/api/rest_v1/page/summary/${queryFormatada}`;
-            
-            const response = await fetch(url);
-            const data = await response.json();
-            
-            loader.style.display = "none";
-            
-            let resposta = "";
-            
-            if (data.title === "Not found." || data.type === "disambiguation") {
-                resposta = "Não encontrei um resumo exato. Tente digitar apenas o nome principal (ex: 'Alan Turing' ou 'Brasil').";
-            } else if (data.extract) {
-                resposta = `<b>${data.title}</b>: ${data.extract}`;
-            } else {
-                resposta = "Encontrei o assunto, mas não consegui extrair o texto. Tente outro tema!";
+            // 1ª Tentativa: Busca direta
+            let response = await fetch(`https://pt.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(texto)}`);
+            let data = await response.json();
+
+            // 2ª Tentativa: Se não achar, busca o termo correto primeiro
+            if (data.type === "disambiguation" || data.title === "Not found.") {
+                const searchRes = await fetch(`https://pt.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(texto)}&format=json&origin=*`);
+                const searchData = await searchRes.json();
+                
+                if (searchData.query.search.length > 0) {
+                    const novoTermo = searchData.query.search[0].title;
+                    response = await fetch(`https://pt.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(novoTermo)}`);
+                    data = await response.json();
+                }
             }
 
+            loader.style.display = "none";
+            let resposta = data.extract ? `<b>${data.title}</b>: ${data.extract}` : "Não encontrei nada sobre isso. Tente ser mais simples.";
             chat.innerHTML += `<div class="msg bot">${resposta}</div>`;
+            
         } catch (e) {
             loader.style.display = "none";
-            chat.innerHTML += `<div class="msg bot">Ops! Ocorreu um erro na pesquisa. Verifique sua conexão.</div>`;
+            chat.innerHTML += `<div class="msg bot">Erro na rede. Tente de novo!</div>`;
         }
         chat.scrollTop = chat.scrollHeight;
     }
 
-    // Atalho para o botão "Ir" ou "Enter" do teclado do celular
-    document.getElementById('pergunta').addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') {
-            buscar();
-        }
-    });
+    document.getElementById('pergunta').addEventListener('keypress', (e) => { if(e.key === 'Enter') buscar(); });
 </script>
-
 </body>
 </html>
