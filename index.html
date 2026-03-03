@@ -2,75 +2,75 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ClassBot v4</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClassBot Oficial</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background-color: #222; color: #e3e3e3; font-family: sans-serif; height: 100vh; display: flex; flex-direction: column; }
-        .header { padding: 15px; font-size: 1.5em; font-weight: bold; color: #4facfe; text-align: center; border-bottom: 1px solid #333; }
+        body { background-color: #222; color: #e3e3e3; font-family: 'Segoe UI', sans-serif; height: 100vh; display: flex; flex-direction: column; }
+        .header { padding: 20px; font-size: 1.5em; font-weight: bold; color: #4facfe; text-align: center; border-bottom: 1px solid #333; }
         #chat { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-        .msg { padding: 12px 16px; border-radius: 18px; max-width: 85%; line-height: 1.5; font-size: 16px; }
+        .msg { padding: 12px 16px; border-radius: 20px; max-width: 85%; line-height: 1.5; font-size: 16px; }
         .bot { background: #1a1a1a; align-self: flex-start; border: 1px solid #333; border-bottom-left-radius: 2px; }
         .user { background: #333; align-self: flex-end; border: 1px solid #444; border-bottom-right-radius: 2px; }
-        .loading { font-size: 0.85em; color: #4facfe; text-align: center; padding: 10px; display: none; }
         .input-container { background: #1a1a1a; padding: 15px; border-top: 1px solid #333; }
-        .input-area { background: #333; border-radius: 25px; display: flex; padding: 5px 5px 5px 15px; border: 1px solid #444; align-items: center; max-width: 600px; margin: 0 auto; }
+        .input-area { background: #333; border-radius: 25px; display: flex; padding: 5px 5px 5px 15px; border: 1px solid #4facfe; align-items: center; max-width: 600px; margin: 0 auto; }
         input { flex: 1; background: transparent; border: none; color: white; padding: 12px 0; outline: none; font-size: 16px; }
-        button { background: #4facfe; border: none; color: white; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        button { background: #4facfe; border: none; color: white; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 1.2em; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
+
     <div class="header">🤖 ClassBot</div>
     <div id="chat">
-        <div class="msg bot">Olá! Sou o <b>ClassBot</b>. Agora eu uso o seu navegador como motor de busca. O que quer saber?</div>
+        <div class="msg bot">Olá! Eu sou o <b>ClassBot</b>. <br>Digite algo e eu usarei o motor de sugestões do Google para te responder aqui!</div>
     </div>
-    <div id="loader" class="loading">Pesquisando na rede...</div>
+
     <div class="input-container">
         <div class="input-area">
-            <input type="text" id="pergunta" placeholder="Digite sua pergunta...">
+            <input type="text" id="pergunta" placeholder="Pergunte algo..." autocomplete="off">
             <button onclick="buscar()">➤</button>
         </div>
     </div>
 
 <script>
-    async function buscar() {
+    function buscar() {
         const input = document.getElementById('pergunta');
         const chat = document.getElementById('chat');
-        const loader = document.getElementById('loader');
-        const texto = input.value.trim();
+        const query = input.value.trim();
 
-        if (!texto) return;
+        if (!query) return;
 
-        chat.innerHTML += `<div class="msg user">${texto}</div>`;
+        // Adiciona mensagem do usuário
+        chat.innerHTML += `<div class="msg user">${query}</div>`;
         input.value = "";
-        loader.style.display = "block";
         chat.scrollTop = chat.scrollHeight;
 
-        try {
-            // Usando o motor de busca do DuckDuckGo que é mais aberto para códigos HTML simples
-            const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(texto)}&format=json&no_html=1&skip_disambig=1`;
-            
-            const response = await fetch(url);
-            const data = await response.json();
-            
-            loader.style.display = "none";
-            
-            let resposta = "";
-            if (data.AbstractText) {
-                resposta = data.AbstractText;
-            } else if (data.RelatedTopics && data.RelatedTopics.length > 0) {
-                resposta = data.RelatedTopics[0].Text;
-            } else {
-                resposta = "Não consegui um resumo direto. Tente perguntar: 'Quem foi Alan Turing?'";
-            }
+        // TÉCNICA JSONP: Criamos um script que o navegador não bloqueia
+        const script = document.createElement('script');
+        script.src = `https://suggestqueries.google.com/complete/search?client=firefox&q=${encodeURIComponent(query)}&callback=processarResposta`;
+        document.body.appendChild(script);
+        document.body.removeChild(script);
+    }
 
-            chat.innerHTML += `<div class="msg bot"><b>ClassBot:</b><br>${resposta}</div>`;
-        } catch (e) {
-            loader.style.display = "none";
-            chat.innerHTML += `<div class="msg bot">Erro ao acessar o motor de busca. Tente novamente.</div>`;
+    // Essa função recebe os dados do Google e coloca no chat
+    function processarResposta(data) {
+        const chat = document.getElementById('chat');
+        const sugestoes = data[1]; // O Google manda uma lista de fatos/sugestões
+        
+        let respostaFinal = "";
+        if (sugestoes.length > 0) {
+            respostaFinal = "<b>Resultados encontrados:</b><br>• " + sugestoes.slice(0, 4).join('<br>• ');
+        } else {
+            respostaFinal = "Não consegui extrair dados específicos. Tente mudar as palavras!";
         }
+
+        chat.innerHTML += `<div class="msg bot">${respostaFinal}</div>`;
         chat.scrollTop = chat.scrollHeight;
     }
+
+    // Enter para enviar
+    document.getElementById('pergunta').addEventListener('keypress', (e) => { if(e.key === 'Enter') buscar(); });
 </script>
+
 </body>
 </html>
