@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClassBot - Seu Assistente de Pesquisa</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .chat-container { width: 400px; background: white; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; }
+        .header { background: #2c3e50; color: white; padding: 20px; text-align: center; font-size: 1.2em; font-weight: bold; }
+        .chat-box { height: 300px; padding: 15px; overflow-y: auto; border-bottom: 1px solid #eee; font-size: 0.9em; color: #333; }
+        .input-area { display: flex; padding: 10px; }
+        input { flex: 1; border: 1px solid #ddd; padding: 10px; border-radius: 5px; outline: none; }
+        button { background: #27ae60; color: white; border: none; padding: 10px 15px; margin-left: 5px; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #219150; }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="header">🤖 ClassBot</div>
+    <div class="chat-box" id="chatBox">
+        <p><strong>ClassBot:</strong> Olá! O que você quer que eu pesquise no Google hoje?</p>
+    </div>
+    <div class="input-area">
+        <input type="text" id="userInput" placeholder="Digite sua pergunta...">
+        <button onclick="enviarPergunta()">Buscar</button>
+    </div>
+</div>
+
+<script>
+    function enviarPergunta() {
+        const input = document.getElementById('userInput');
+        const chatBox = document.getElementById('chatBox');
+        
+        if(input.value !== "") {
+            chatBox.innerHTML += `<p><strong>Você:</strong> ${input.value}</p>`;
+            chatBox.innerHTML += `<p><em>ClassBot está pesquisando em várias fontes...</em></p>`;
+            input.value = "";
+            // Aqui futuramente conectamos com a API de busca
+        }
+    }
+</script>
+
+</body>
+</html>
