@@ -12,12 +12,12 @@ export default async function handler(req, res) {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                // Atualizado para o modelo atual que suporta visão
-                model: "llama-3.2-11b-vision-instant", 
+                // Tentando o modelo de 90B que é o sucessor mais provável com acesso liberado
+                model: "llama-3.2-90b-vision-preview", 
                 messages: [
                     {
                         role: "system",
-                        content: "Você é o ClassBot da Classtech, criado pelo Red. Personalidade: Adolescente gênio, sarcástico e direto. Se ver uma imagem, analise com precisão técnica e deboche."
+                        content: "Você é o ClassBot da Classtech, criado pelo Red. Personalidade: Adolescente gênio, sarcástico e direto. Analise imagens com precisão técnica e deboche."
                     },
                     ...mensagens
                 ],
@@ -29,12 +29,15 @@ export default async function handler(req, res) {
         const data = await response.json();
 
         if (data.error) {
+            // Se esse também falhar, o erro vai nos dizer quais modelos VOCÊ tem acesso
             console.error("Erro Groq:", data.error);
-            return res.status(400).json({ answer: "Erro na API: " + data.error.message });
+            return res.status(400).json({ 
+                answer: "Erro na API: " + data.error.message + ". Verifique no console do Groq quais modelos estão ativos para sua conta." 
+            });
         }
 
         res.status(200).json({ answer: data.choices[0].message.content });
     } catch (error) {
-        res.status(500).json({ answer: "O servidor da Classtech engasgou com essa imagem." });
+        res.status(500).json({ answer: "O servidor da Classtech deu tilt." });
     }
 }
