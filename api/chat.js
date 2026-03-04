@@ -27,7 +27,7 @@ export default async function handler(req, res) {
                     },
                     ...mensagens
                 ],
-                temperature: 0.8
+                temperature: 0.9
             })
         });
 
