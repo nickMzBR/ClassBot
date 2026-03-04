@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ClassBot v4 - Qwen Edition</title>
+    <title>ClassBot Ultra-Lite</title>
     <style>
         :root { --bg: #222; --card: #2d2d2d; --txt: #e3e3e3; --accent: #19c37d; }
-        * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        * { box-sizing: border-box; font-family: sans-serif; -webkit-tap-highlight-color: transparent; }
         
         body, html { 
             margin: 0; padding: 0; height: 100vh; 
@@ -14,66 +14,66 @@
             overflow: hidden; display: flex; flex-direction: column;
         }
 
-        /* Loader Inteligente */
+        /* Tela de Carregamento Rápida */
         #loader { 
-            position: fixed; inset: 0; background: var(--bg); z-index: 1000; 
+            position: fixed; inset: 0; background: var(--bg); z-index: 2000; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            transition: opacity 0.5s ease;
+            transition: opacity 0.4s;
         }
-        .progress-box { width: 80%; max-width: 300px; background: #333; height: 8px; border-radius: 10px; margin-top: 15px; overflow: hidden; border: 1px solid #444; }
-        #bar { width: 0%; height: 100%; background: linear-gradient(90deg, #19c37d, #10a37f); transition: width 0.3s; }
-        #status { font-size: 14px; color: var(--accent); font-weight: bold; text-align: center; }
+        .progress-box { width: 70%; max-width: 250px; background: #333; height: 6px; border-radius: 10px; margin-top: 15px; overflow: hidden; }
+        #bar { width: 0%; height: 100%; background: var(--accent); transition: width 0.2s; }
+        #status { font-size: 13px; color: var(--accent); font-weight: bold; margin-bottom: 5px; }
 
-        header { padding: 15px; text-align: center; border-bottom: 1px solid #333; font-weight: bold; background: #252525; }
+        header { padding: 15px; text-align: center; border-bottom: 1px solid #333; font-weight: bold; background: #222; }
 
         #messages { 
-            flex: 1; overflow-y: auto; padding: 20px; 
-            display: flex; flex-direction: column; gap: 15px;
-            padding-bottom: 100px; 
+            flex: 1; overflow-y: auto; padding: 15px; 
+            display: flex; flex-direction: column; gap: 12px;
+            padding-bottom: 90px; 
         }
         
-        .msg { max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 1.5; word-wrap: break-word; }
-        .user { align-self: flex-end; background: #005fb8; border-bottom-right-radius: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .msg { max-width: 85%; padding: 10px 15px; border-radius: 18px; font-size: 15px; line-height: 1.4; word-wrap: break-word; }
+        .user { align-self: flex-end; background: #005fb8; border-bottom-right-radius: 2px; }
         .ai { align-self: flex-start; background: var(--card); border: 1px solid #3d3d3d; border-bottom-left-radius: 2px; }
 
-        /* Input Bar Otimizada */
+        /* Input Bar Fixa */
         #input-area { 
             position: fixed; bottom: 0; width: 100%; 
-            background: var(--bg); padding: 12px 15px;
+            background: var(--bg); padding: 10px;
             border-top: 1px solid #333;
         }
         .box { 
-            max-width: 800px; margin: 0 auto; display: flex; 
-            background: #333; border-radius: 30px; padding: 5px 15px; align-items: center;
+            max-width: 600px; margin: 0 auto; display: flex; 
+            background: #333; border-radius: 25px; padding: 5px 12px; align-items: center;
         }
         input { 
             flex: 1; background: transparent; border: none; 
-            color: white; padding: 10px; outline: none; font-size: 16px; 
+            color: white; padding: 8px; outline: none; font-size: 16px; 
         }
         button { 
             background: var(--accent); border: none; color: white; 
-            width: 38px; height: 38px; border-radius: 50%; cursor: pointer;
-            font-weight: bold; display: flex; align-items: center; justify-content: center;
+            width: 35px; height: 35px; border-radius: 50%; cursor: pointer;
+            font-weight: bold; font-size: 18px;
         }
     </style>
 </head>
 <body>
 
     <div id="loader">
-        <div id="status">Despertando ClassBot...</div>
+        <div id="status">Iniciando IA Leve...</div>
         <div class="progress-box"><div id="bar"></div></div>
-        <p style="font-size: 11px; color: #777; margin-top: 12px;">Sincronizando 0.5B Instruct (Aprox. 350MB)</p>
+        <p style="font-size: 10px; color: #666; margin-top: 10px;">Otimizado para dispositivos de 4GB RAM</p>
     </div>
 
-    <header>ClassBot AI</header>
+    <header>ClassBot Lite</header>
     
     <div id="messages">
-        <div class="msg ai">Olá! Sou o **ClassBot**. Agora uso o motor Qwen 2.5, sou muito mais inteligente e entendo suas ordens. Como posso te ajudar?</div>
+        <div class="msg ai">Oi! Agora estou usando um motor ultra-leve. Posso conversar sem travar seu celular. O que quer saber?</div>
     </div>
 
     <div id="input-area">
         <div class="box">
-            <input type="text" id="userInput" placeholder="Pergunte qualquer coisa...">
+            <input type="text" id="userInput" placeholder="Diga um 'Oi'..." autocomplete="off">
             <button id="sendBtn">↑</button>
         </div>
     </div>
@@ -81,7 +81,7 @@
     <script type="module">
         import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1';
 
-        // Configurações críticas para 4GB de RAM
+        // Configurações Anti-Erro
         env.allowLocalModels = false;
         env.useBrowserCache = true; 
 
@@ -92,20 +92,20 @@
 
         async function initIA() {
             try {
-                // O modelo Qwen2.5-0.5B-Instruct é o "Estado da Arte" para navegadores
-                generator = await pipeline('text-generation', 'Xenova/Qwen2.5-0.5B-Instruct', {
+                // Modelo SmolLM2-135M: O mais leve da categoria Instruct (ideal p/ mobile)
+                generator = await pipeline('text-generation', 'Xenova/SmolLM2-135M-Instruct', {
                     progress_callback: (p) => {
                         if (p.status === 'progress') {
                             bar.style.width = p.progress + '%';
-                            status.innerText = `Carregando Cérebro: ${Math.round(p.progress)}%`;
+                            status.innerText = `Baixando: ${Math.round(p.progress)}%`;
                         }
                     }
                 });
                 
                 loader.style.opacity = '0';
-                setTimeout(() => loader.style.display = 'none', 500);
+                setTimeout(() => loader.style.display = 'none', 400);
             } catch (err) {
-                status.innerText = "Erro de Memória! Feche outras abas e recarregue.";
+                status.innerText = "Erro: Sem memória RAM livre.";
                 console.error(err);
             }
         }
@@ -118,24 +118,28 @@
             addMsg(text, 'user');
             input.value = '';
             
-            const aiMsg = addMsg("Pensando...", 'ai');
+            const aiMsg = addMsg("...", 'ai');
+            scrollDown();
 
-            // Template de Chat para evitar respostas aleatórias (estilo Shandong)
-            const prompt = `<|im_start|>system\nVocê é o ClassBot, uma IA útil que fala Português.<|im_end|>\n<|im_start|>user\n${text}<|im_end|>\n<|im_start|>assistant\n`;
+            // Prompt formatado para o modelo Instruct
+            const prompt = `<|im_start|>user\n${text}<|im_end|>\n<|im_start|>assistant\n`;
 
-            const output = await generator(prompt, { 
-                max_new_tokens: 120,
-                temperature: 0.7,
-                do_sample: true,
-                top_p: 0.9,
-                stop: ["<|im_end|>"]
-            });
+            try {
+                const output = await generator(prompt, { 
+                    max_new_tokens: 60,
+                    temperature: 0.6,
+                    repetition_penalty: 1.2,
+                    do_sample: true,
+                    stop: ["<|im_end|>"]
+                });
 
-            // Extrai apenas a resposta da IA
-            let fullText = output[0].generated_text;
-            let cleanResponse = fullText.split('<|im_start|>assistant\n')[1]?.replace('<|im_end|>', '').trim();
-            
-            aiMsg.innerText = cleanResponse || "Entendido! Como posso prosseguir?";
+                let fullText = output[0].generated_text;
+                let response = fullText.split('<|im_start|>assistant\n')[1]?.replace('<|im_end|>', '').trim();
+                
+                aiMsg.innerText = response || "Entendi. Pode me contar mais?";
+            } catch (e) {
+                aiMsg.innerText = "Ocorreu um erro ao processar. Tente frases curtas.";
+            }
             scrollDown();
         }
 
@@ -156,7 +160,7 @@
         document.getElementById('sendBtn').onclick = enviar;
         document.getElementById('userInput').onkeypress = (e) => { if(e.key === 'Enter') enviar(); };
 
-        // Fix para o teclado do celular não bugar o layout
+        // Ajuste teclado mobile
         window.visualViewport?.addEventListener('resize', () => {
             document.body.style.height = window.visualViewport.height + 'px';
             scrollDown();
