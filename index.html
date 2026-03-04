@@ -1,82 +1,162 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChatGPT Style IA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mobile AI Chat</title>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <style>
         :root {
             --bg-color: #343541;
-            --sidebar-color: #202123;
-            --user-msg: #343541;
             --ai-msg: #444654;
             --text-color: #ececf1;
+            --input-bg: #40414f;
         }
 
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-color); }
-        
-        #container { display: flex; height: 100vh; }
+        body, html { 
+            margin: 0; padding: 0; height: 100%; 
+            background-color: var(--bg-color); 
+            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden; /* Impede scroll na página inteira, apenas no chat */
+        }
 
-        /* Sidebar */
-        #sidebar { width: 260px; background-color: var(--sidebar-color); padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-        .new-chat { border: 1px solid #4d4d4f; padding: 10px; border-radius: 5px; font-size: 14px; text-align: center; cursor: pointer; }
+        #container { 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh; 
+            height: -webkit-fill-available; /* Ajuste para iOS */
+        }
 
-        /* Chat Area */
-        #chat-main { flex: 1; display: flex; flex-direction: column; position: relative; }
-        #messages { flex: 1; overflow-y: auto; padding-bottom: 150px; }
+        /* Área de Mensagens */
+        #messages { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 10px 0;
+            display: flex;
+            flex-direction: column;
+        }
         
-        .message { padding: 25px 20%; display: flex; gap: 20px; line-height: 1.6; }
-        .user { background-color: var(--user-msg); }
-        .ai { background-color: var(--ai-msg); border-bottom: 1px solid rgba(0,0,0,0.1); }
+        .message { 
+            padding: 15px 15px; 
+            display: flex; 
+            gap: 15px; 
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .user { background-color: var(--bg-color); }
+        .ai { background-color: var(--ai-msg); }
         
-        .avatar { width: 30px; height: 30px; border-radius: 2px; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; }
+        .avatar { 
+            width: 28px; height: 28px; 
+            border-radius: 3px; 
+            display: flex; align-items: center; justify-content: center; 
+            font-weight: bold; font-size: 12px; flex-shrink: 0; 
+        }
         .user .avatar { background: #5436da; }
         .ai .avatar { background: #19c37d; }
 
-        /* Input Area */
-        #input-area { position: absolute; bottom: 0; width: 100%; padding: 20px 0; background-image: linear-gradient(180deg,rgba(52,53,65,0),#343541 50%); }
-        .input-box { width: 60%; margin: 0 auto; position: relative; }
-        input { width: 100%; background: #40414f; border: 1px solid #303139; color: white; padding: 14px; border-radius: 8px; box-shadow: 0 0 15px rgba(0,0,0,0.1); outline: none; }
+        /* Área de Input Fixa no Rodapé */
+        #input-area { 
+            padding: 10px; 
+            background: var(--bg-color);
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .input-box { 
+            display: flex;
+            align-items: center;
+            background: var(--input-bg);
+            border-radius: 12px;
+            padding: 5px 12px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+
+        input { 
+            flex: 1; 
+            background: transparent; 
+            border: none; 
+            color: white; 
+            padding: 12px 0; 
+            font-size: 16px; /* Evita zoom automático no iOS */
+            outline: none; 
+        }
+
+        #send-btn {
+            background: #19c37d;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            padding: 5px 10px;
+            margin-left: 10px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        #send-btn:disabled { opacity: 0.3; }
+
+        /* Barra de carregamento discreta */
+        #loader {
+            height: 2px;
+            width: 0%;
+            background: #19c37d;
+            transition: width 0.3s;
+        }
     </style>
 </head>
 <body>
 
 <div id="container">
-    <div id="sidebar">
-        <div class="new-chat">+ New Chat</div>
-        <div style="font-size: 12px; color: #8e8ea0; margin-top: 20px;">Histórico (Local)</div>
+    <div id="loader"></div>
+    
+    <div id="messages">
+        <div class="message ai">
+            <div class="avatar">AI</div>
+            <div id="status-text" class="content">A treinar rede neural local... 0%</div>
+        </div>
     </div>
 
-    <div id="chat-main">
-        <div id="messages">
-            <div class="message ai">
-                <div class="avatar">AI</div>
-                <div class="content" id="status-text">Estou carregando meus neurônios... aguarde um momento.</div>
-            </div>
+    <div id="input-area">
+        <div class="input-box">
+            <input type="number" id="userInput" placeholder="Temp em Celsius..." disabled>
+            <button id="send-btn" onclick="enviarMensagem()" disabled>↑</button>
         </div>
-
-        <div id="input-area">
-            <div class="input-box">
-                <input type="text" id="userInput" placeholder="Envie uma temperatura em Celsius..." onkeypress="handleEnter(event)" disabled>
-            </div>
-        </div>
+        <p style="font-size: 9px; text-align: center; color: #8e8ea0; margin-top: 8px;">
+            Processado 100% no teu dispositivo (TensorFlow.js)
+        </p>
     </div>
 </div>
 
 <script>
-    // --- LÓGICA DA IA (TensorFlow.js) ---
+    // --- Lógica da IA ---
     const model = tf.sequential();
     model.add(tf.layers.dense({ units: 1, inputShape: [1] }));
     model.compile({ loss: 'meanSquaredError', optimizer: 'sgd' });
 
-    const xs = tf.tensor2d([-40, -10, 0, 8, 15, 22, 38], [7, 1]);
-    const ys = tf.tensor2d([-40, 14, 32, 46.4, 59, 71.6, 100.4], [7, 1]);
+    const xs = tf.tensor2d([-40, -10, 0, 8, 15, 22, 38, 100], [8, 1]);
+    const ys = tf.tensor2d([-40, 14, 32, 46.4, 59, 71.6, 100.4, 212], [8, 1]);
 
     async function treinarIA() {
-        await model.fit(xs, ys, { epochs: 500 });
-        document.getElementById('status-text').innerText = "Olá! Sou uma IA treinada localmente. Digite um valor em Celsius e eu converterei para Fahrenheit para você.";
+        const loader = document.getElementById('loader');
+        const status = document.getElementById('status-text');
+
+        await model.fit(xs, ys, { 
+            epochs: 200,
+            callbacks: {
+                onEpochEnd: (epoch, logs) => {
+                    let progresso = (epoch / 200) * 100;
+                    loader.style.width = progresso + "%";
+                    status.innerText = `A configurar cérebro local: ${progresso.toFixed(0)}%`;
+                }
+            }
+        });
+
+        status.innerText = "Olá! Digita uma temperatura em Celsius e eu respondo em Fahrenheit.";
         document.getElementById('userInput').disabled = false;
+        document.getElementById('send-btn').disabled = false;
+        loader.style.display = 'none';
     }
 
     function addMessage(text, sender) {
@@ -86,34 +166,34 @@
             <div class="avatar">${sender === 'user' ? 'U' : 'AI'}</div>
             <div class="content">${text}</div>
         `;
-        const container = document.getElementById('messages');
-        container.appendChild(div);
-        container.scrollTop = container.scrollHeight;
+        const msgsDiv = document.getElementById('messages');
+        msgsDiv.appendChild(div);
+        msgsDiv.scrollTop = msgsDiv.scrollHeight;
     }
 
-    function handleEnter(e) {
-        if (e.key === 'Enter') {
-            const input = document.getElementById('userInput');
-            const valor = parseFloat(input.value);
+    function enviarMensagem() {
+        const input = document.getElementById('userInput');
+        const valor = parseFloat(input.value);
+        
+        if (!isNaN(valor)) {
+            addMessage(`${valor}°C`, 'user');
+            input.value = '';
             
-            if (!isNaN(valor)) {
-                addMessage(`${valor}°C`, 'user');
-                processar(valor);
-                input.value = '';
-            }
+            // Simular tempo de "pensar" da IA
+            setTimeout(() => {
+                const resultado = tf.tidy(() => {
+                    const tensor = tf.tensor2d([valor], [1, 1]);
+                    return model.predict(tensor).dataSync()[0];
+                });
+                addMessage(`Isso equivale a **${resultado.toFixed(1)}°F**.`, 'ai');
+            }, 400);
         }
     }
 
-    function processar(celsius) {
-        const resultado = tf.tidy(() => {
-            const inputTensor = tf.tensor2d([celsius], [1, 1]);
-            return model.predict(inputTensor).dataSync()[0];
-        });
-
-        setTimeout(() => {
-            addMessage(`Com base no meu treinamento, ${celsius}°C é aproximadamente **${resultado.toFixed(2)}°F**.`, 'ai');
-        }, 500);
-    }
+    // Permitir enviar ao apertar Enter no teclado do telemóvel
+    document.getElementById('userInput').addEventListener('keypress', (e) => {
+        if(e.key === 'Enter') enviarMensagem();
+    });
 
     treinarIA();
 </script>
