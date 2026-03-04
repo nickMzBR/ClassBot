@@ -3,97 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ClassBot Xenova</title>
+    <title>ClassBot Nano</title>
     <style>
         :root { --bg: #222; --card: #2d2d2d; --txt: #e3e3e3; --accent: #19c37d; }
-        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body, html { margin: 0; padding: 0; height: 100vh; background: var(--bg); color: var(--txt); overflow: hidden; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+        
+        body, html { 
+            margin: 0; padding: 0; height: 100vh; 
+            background: var(--bg); color: var(--txt); 
+            overflow: hidden; display: flex; flex-direction: column;
+        }
 
-        /* Tela de Carregamento */
+        /* Tela de Carregamento Ultra Rápida */
         #loader { 
-            position: fixed; inset: 0; background: var(--bg); z-index: 100; 
+            position: fixed; inset: 0; background: var(--bg); z-index: 1000; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
         }
-        .progress-container { width: 70%; background: #333; height: 8px; border-radius: 10px; margin-top: 20px; overflow: hidden; }
-        #bar { width: 0%; height: 100%; background: var(--accent); transition: width 0.3s; }
+        .progress-box { width: 70%; max-width: 300px; background: #333; height: 6px; border-radius: 10px; margin-top: 15px; overflow: hidden; }
+        #bar { width: 0%; height: 100%; background: var(--accent); transition: width 0.2s; }
+        #status { font-size: 14px; color: var(--accent); font-weight: bold; }
 
-        #app { display: flex; flex-direction: column; height: 100%; }
-        header { padding: 15px; text-align: center; border-bottom: 1px solid #333; color: var(--accent); font-weight: bold; }
-        #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; padding-bottom: 100px; }
+        header { padding: 15px; text-align: center; border-bottom: 1px solid #333; font-weight: bold; font-size: 1.1rem; }
+
+        #messages { 
+            flex: 1; overflow-y: auto; padding: 20px; 
+            display: flex; flex-direction: column; gap: 12px;
+            padding-bottom: 80px; 
+        }
         
-        .msg { max-width: 85%; padding: 12px; border-radius: 15px; font-size: 15px; line-height: 1.5; }
+        .msg { max-width: 80%; padding: 10px 14px; border-radius: 15px; font-size: 15px; line-height: 1.4; word-wrap: break-word; }
         .user { align-self: flex-end; background: #005fb8; border-bottom-right-radius: 2px; }
         .ai { align-self: flex-start; background: var(--card); border: 1px solid #3d3d3d; border-bottom-left-radius: 2px; }
 
-        #input-area { position: fixed; bottom: 0; width: 100%; background: var(--bg); padding: 15px; border-top: 1px solid #333; }
-        .box { max-width: 800px; margin: 0 auto; display: flex; background: #333; border-radius: 30px; padding: 5px 15px; }
-        input { flex: 1; background: transparent; border: none; color: white; padding: 12px; outline: none; }
-        button { background: var(--accent); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; }
+        /* Input fixado que não quebra no mobile */
+        #input-area { 
+            position: fixed; bottom: 0; width: 100%; 
+            background: var(--bg); padding: 10px 15px;
+            border-top: 1px solid #333;
+        }
+        .box { 
+            max-width: 600px; margin: 0 auto; display: flex; 
+            background: #333; border-radius: 25px; padding: 4px 12px; align-items: center;
+        }
+        input { 
+            flex: 1; background: transparent; border: none; 
+            color: white; padding: 10px; outline: none; font-size: 16px; 
+        }
+        button { 
+            background: var(--accent); border: none; color: white; 
+            width: 34px; height: 34px; border-radius: 50%; cursor: pointer;
+            font-weight: bold; font-size: 18px;
+        }
     </style>
 </head>
 <body>
 
     <div id="loader">
-        <h3 id="status">Carregando Inteligência...</h3>
-        <div class="progress-container"><div id="bar"></div></div>
-        <p style="font-size: 12px; color: #777; margin-top: 10px;">Isso só acontece na primeira vez (aprox. 30MB)</p>
+        <div id="status">Iniciando IA...</div>
+        <div class="progress-box"><div id="bar"></div></div>
+        <p style="font-size: 10px; color: #666; margin-top: 8px;">Versão Nano (Leve e estável)</p>
     </div>
 
-    <div id="app">
-        <header>ClassBot Xenova</header>
-        <div id="messages">
-            <div class="msg ai">Olá! Sou o **ClassBot**. Eu rodo totalmente no seu dispositivo via Xenova. Como posso ajudar?</div>
-        </div>
-        <div id="input-area">
-            <div class="box">
-                <input type="text" id="userInput" placeholder="Mande uma mensagem...">
-                <button id="sendBtn">↑</button>
-            </div>
+    <header>ClassBot Nano</header>
+    
+    <div id="messages">
+        <div class="msg ai">Oi! Sou o **ClassBot**. Eu rodo direto no seu celular sem precisar de internet após carregar. O que vamos conversar?</div>
+    </div>
+
+    <div id="input-area">
+        <div class="box">
+            <input type="text" id="userInput" placeholder="Mande um 'Oi'...">
+            <button id="sendBtn">↑</button>
         </div>
     </div>
 
     <script type="module">
         import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1';
 
-        let chatbot;
+        let pipe;
         const bar = document.getElementById('bar');
         const status = document.getElementById('status');
+        const loader = document.getElementById('loader');
 
-        // Inicializa o modelo de forma leve (usando o Qwen-0.5B ou similar)
-        async function init() {
+        // Inicialização rápida
+        async function start() {
             try {
-                chatbot = await pipeline('text-generation', 'Xenova/Qwen1.5-0.5B-Chat', {
+                // Modelo Nano: 135 milhões de parâmetros (~40MB). Ideal para Celular.
+                pipe = await pipeline('text-generation', 'Xenova/smollm-135M-instruct', {
                     progress_callback: (p) => {
                         if (p.status === 'progress') {
                             bar.style.width = p.progress + '%';
-                            status.innerText = `Baixando cérebro: ${Math.round(p.progress)}%`;
+                            status.innerText = `Sincronizando: ${Math.round(p.progress)}%`;
                         }
                     }
                 });
-                document.getElementById('loader').style.display = 'none';
-            } catch (e) {
-                status.innerText = "Erro ao carregar no celular. Tente usar o Chrome.";
-                console.error(e);
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.display = 'none', 400);
+            } catch (err) {
+                status.innerText = "Erro ao carregar IA local.";
+                console.error(err);
             }
         }
 
         async function enviar() {
             const input = document.getElementById('userInput');
             const text = input.value.trim();
-            if (!text || !chatbot) return;
+            if (!text || !pipe) return;
 
             addMsg(text, 'user');
             input.value = '';
             const aiMsg = addMsg("Pensando...", 'ai');
 
-            // Gerar resposta generativa real
-            const output = await chatbot(text, { 
-                max_new_tokens: 100,
-                temperature: 0.7,
+            // Lógica Generativa
+            const output = await pipe(text, { 
+                max_new_tokens: 40,
+                temperature: 0.6,
                 do_sample: true
             });
 
-            aiMsg.innerText = output[0].generated_text.replace(text, "").trim();
+            let response = output[0].generated_text.replace(text, "").trim();
+            aiMsg.innerText = response || "Interessante... pode me contar mais?";
             scrollDown();
         }
 
@@ -112,7 +141,17 @@
         }
 
         document.getElementById('sendBtn').onclick = enviar;
-        init();
+        document.getElementById('userInput').onkeypress = (e) => { if(e.key === 'Enter') enviar(); };
+
+        // Ajuste teclado mobile
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => {
+                document.body.style.height = window.visualViewport.height + 'px';
+                scrollDown();
+            });
+        }
+
+        start();
     </script>
 </body>
 </html>
