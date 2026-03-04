@@ -7,65 +7,51 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #007bff; --bg: #1e1e1e; --sidebar: #121212; --card: #2d2d2d; --white: #ffffff; --hover: #353535; }
-        
         * { box-sizing: border-box; font-family: 'Montserrat', sans-serif; margin: 0; padding: 0; }
-        
         body, html { height: 100vh; background: var(--bg); color: var(--white); overflow: hidden; display: flex; }
 
-        /* Login Overlay */
+        /* Login */
         #login-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .auth-box { width: 90%; max-width: 320px; text-align: center; background: var(--card); padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .auth-box { width: 90%; max-width: 320px; text-align: center; background: var(--card); padding: 30px; border-radius: 15px; }
         .auth-input { width: 100%; padding: 12px; margin-bottom: 12px; border-radius: 8px; border: 1px solid #444; background: #121212; color: white; outline: none; }
 
-        /* Sidebar Responsiva */
-        #sidebar { 
-            width: 280px; background: var(--sidebar); display: flex; flex-direction: column; 
-            border-right: 1px solid #333; transition: transform 0.3s ease; z-index: 1000;
-        }
-
-        .new-chat { margin: 15px; padding: 12px; border: 1px solid #444; border-radius: 8px; cursor: pointer; text-align: center; font-weight: 600; background: transparent; color: white; transition: 0.2s; }
-        .new-chat:hover { background: var(--hover); }
-        
+        /* Sidebar */
+        #sidebar { width: 280px; background: var(--sidebar); display: flex; flex-direction: column; border-right: 1px solid #333; transition: transform 0.3s ease; z-index: 1000; }
+        .new-chat { margin: 15px; padding: 12px; border: 1px solid #444; border-radius: 8px; cursor: pointer; text-align: center; font-weight: 600; background: transparent; color: white; }
         #chat-list { flex: 1; overflow-y: auto; padding: 0 10px; }
-        .chat-item { 
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 12px; margin-bottom: 8px; border-radius: 8px; cursor: pointer; 
-            font-size: 0.9rem; color: #ccc; transition: 0.2s;
-        }
+        .chat-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; margin-bottom: 8px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; color: #ccc; }
         .chat-item:hover, .chat-item.active { background: var(--card); color: white; }
         .chat-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
-        .btn-delete { color: #555; padding: 5px; margin-left: 10px; transition: 0.2s; }
+        .btn-delete { color: #555; padding: 5px; margin-left: 10px; }
         .btn-delete:hover { color: #ff4444; }
 
-        .user-footer { padding: 15px; border-top: 1px solid #333; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
+        /* Footer Sidebar */
+        .user-footer { padding: 20px; border-top: 1px solid #333; display: flex; flex-direction: column; gap: 10px; background: #0d0d0d; }
+        .user-info { font-size: 0.9rem; font-weight: 600; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+        .btn-sair { width: 100%; padding: 10px; background: #ff444422; color: #ff4444; border: 1px solid #ff444444; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 0.75rem; text-align: center; transition: 0.2s; }
+        .btn-sair:hover { background: #ff4444; color: white; }
 
-        /* Área Principal */
+        /* Main Area */
         #main { flex: 1; display: flex; flex-direction: column; height: 100vh; position: relative; }
-        
-        header { 
-            padding: 15px 20px; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 15px; 
-            background: rgba(30,30,30,0.8); backdrop-filter: blur(10px); z-index: 500;
-        }
+        header { padding: 15px 20px; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 15px; background: #1e1e1e; }
         .menu-toggle { display: none; cursor: pointer; font-size: 1.5rem; }
-
-        #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; width: 100%; max-width: 800px; margin: 0 auto; }
+        #messages { flex: 1; overflow-y: auto; padding: 20px; width: 100%; max-width: 800px; margin: 0 auto; }
         .msg-row { display: flex; flex-direction: column; margin-bottom: 25px; width: 100%; }
         .msg-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; color: var(--primary); }
         .ai .msg-label { color: #888; }
         .msg-content { font-size: 1rem; line-height: 1.6; white-space: pre-wrap; }
 
-        /* Input responsivo */
+        /* Input */
         #input-area { padding: 20px; width: 100%; max-width: 800px; margin: 0 auto; }
         .input-box { display: flex; background: var(--card); border-radius: 12px; padding: 10px 15px; border: 1px solid #444; align-items: center; }
         #userInput { flex: 1; background: transparent; border: none; color: white; outline: none; font-size: 16px; padding: 5px; }
         #sendBtn { background: var(--primary); border: none; color: white; width: 40px; height: 40px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-        /* Estilos para Mobile */
         @media (max-width: 768px) {
             .menu-toggle { display: block; }
             #sidebar { position: fixed; height: 100vh; left: 0; transform: translateX(-100%); width: 260px; }
-            #sidebar.open { transform: translateX(0); box-shadow: 10px 0 30px rgba(0,0,0,0.8); }
-            #messages { padding: 15px; }
+            #sidebar.open { transform: translateX(0); }
+            #messages, #input-area { width: 100%; padding: 15px; }
             .overlay-active { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 900; display: none; }
             .overlay-active.show { display: block; }
         }
@@ -89,22 +75,23 @@
         <button class="new-chat" onclick="novaConversa()">+ Nova conversa</button>
         <div id="chat-list"></div>
         <div class="user-footer">
-            <strong id="user-name">Usuário</strong>
-            <span onclick="sair()" style="color:#ff4444; cursor:pointer; font-weight:bold;">Sair</span>
+            <div class="user-info">
+                <span style="background: #333; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 10px;">👤</span>
+                <span id="user-name">Usuário</span>
+            </div>
+            <button class="btn-sair" onclick="sair()">ENCERRAR SESSÃO</button>
         </div>
     </aside>
 
     <main id="main">
         <header>
             <div class="menu-toggle" onclick="toggleMenu()">☰</div>
-            <div style="font-weight: 700;">ClassBot <span style="font-weight: 400; font-size: 0.8rem; color: #666;">v2.0</span></div>
+            <div style="font-weight: 700;">ClassBot</div>
         </header>
-
         <div id="messages"></div>
-
         <div id="input-area">
             <div class="input-box">
-                <input type="text" id="userInput" placeholder="Digite sua mensagem..." autocomplete="off">
+                <input type="text" id="userInput" placeholder="O que vamos fazer hoje?" autocomplete="off">
                 <button id="sendBtn">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="white"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
                 </button>
@@ -133,45 +120,38 @@
         let conversaAtivaId = null;
         let historico = [];
 
-        // --- INICIALIZAÇÃO ---
         if (usuario) {
             document.getElementById('login-overlay').style.display = 'none';
             document.getElementById('user-name').textContent = usuario;
             escutarConversas();
         }
 
-        // --- INTERFACE ---
         window.toggleMenu = () => {
             document.getElementById('sidebar').classList.toggle('open');
             document.getElementById('mobile-overlay').classList.toggle('show');
         };
 
-        // --- AUTH ---
         window.entrar = async () => {
             const u = document.getElementById('userLogin').value.trim().toLowerCase();
             const p = document.getElementById('passLogin').value;
-            if(!u || !p) return;
             const snap = await get(ref(db, `usuarios/${u}`));
             if (snap.exists() && snap.val().senha === p) {
                 localStorage.setItem("cb_user", u);
                 location.reload();
-            } else alert("Usuário ou senha inválidos!");
+            } else alert("Acesso negado.");
         };
 
         window.cadastrar = async () => {
             const u = document.getElementById('userLogin').value.trim().toLowerCase();
             const p = document.getElementById('passLogin').value;
-            if(!u || p.length < 4) return alert("Dados inválidos!");
             await set(ref(db, `usuarios/${u}`), { senha: p });
-            alert("Conta criada! Pode logar.");
+            alert("Conta criada!");
         };
 
         window.sair = () => { localStorage.clear(); location.reload(); };
 
-        // --- LOGICA DE CONVERSAS ---
         function escutarConversas() {
-            const conversasRef = ref(db, `conversas/${usuario}`);
-            onValue(conversasRef, (snapshot) => {
+            onValue(ref(db, `conversas/${usuario}`), (snapshot) => {
                 const list = document.getElementById('chat-list');
                 list.innerHTML = "";
                 const data = snapshot.val();
@@ -180,10 +160,7 @@
                         const primMsg = data[id][0]?.content || "Conversa vazia";
                         const item = document.createElement('div');
                         item.className = `chat-item ${id === conversaAtivaId ? 'active' : ''}`;
-                        item.innerHTML = `
-                            <span onclick="abrirConversa('${id}')">${primMsg}</span>
-                            <div class="btn-delete" onclick="excluirConversa('${id}')">🗑</div>
-                        `;
+                        item.innerHTML = `<span onclick="abrirConversa('${id}')">${primMsg}</span><div class="btn-delete" onclick="excluirConversa('${id}')">🗑</div>`;
                         list.appendChild(item);
                     });
                 }
@@ -208,7 +185,7 @@
         };
 
         window.excluirConversa = async (id) => {
-            if(confirm("Deseja apagar esta conversa?")) {
+            if(confirm("Apagar conversa?")) {
                 await remove(ref(db, `conversas/${usuario}/${id}`));
                 if(conversaAtivaId === id) novaConversa();
             }
@@ -217,7 +194,21 @@
         function renderizarMensagens() {
             const container = document.getElementById('messages');
             container.innerHTML = "";
-            historico.forEach(m => addMsgDOM(m.content, m.role));
+            historico.forEach(m => addMsgDOM(m.content, m.role, false));
+        }
+
+        // --- EFEITO DE DIGITAÇÃO ---
+        function digitarTexto(elemento, texto) {
+            let i = 0; elemento.textContent = "";
+            function tipo() {
+                if (i < texto.length) {
+                    elemento.textContent += texto.charAt(i);
+                    i++;
+                    document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
+                    setTimeout(tipo, 15); // Velocidade da digitação
+                }
+            }
+            tipo();
         }
 
         async function enviar() {
@@ -225,16 +216,14 @@
             const text = input.value.trim();
             if (!text || !usuario) return;
 
-            if (!conversaAtivaId) {
-                conversaAtivaId = push(ref(db, `conversas/${usuario}`)).key;
-            }
+            if (!conversaAtivaId) conversaAtivaId = push(ref(db, `conversas/${usuario}`)).key;
 
             input.value = '';
-            addMsgDOM(text, 'user');
+            addMsgDOM(text, 'user', false);
             historico.push({ role: "user", content: text });
-
-            // Salva no DB
             await set(ref(db, `conversas/${usuario}/${conversaAtivaId}`), historico);
+
+            const aiMsgBox = addMsgDOM("...", 'ai', true);
 
             try {
                 const response = await fetch("/api/chat", {
@@ -243,27 +232,27 @@
                     body: JSON.stringify({ mensagens: historico.slice(-6) })
                 });
                 const data = await response.json();
-                
                 if (data.answer) {
-                    addMsgDOM(data.answer, 'ai');
+                    digitarTexto(aiMsgBox, data.answer);
                     historico.push({ role: "assistant", content: data.answer });
                     await set(ref(db, `conversas/${usuario}/${conversaAtivaId}`), historico);
                 }
-            } catch (e) {
-                addMsgDOM("Erro ao conectar com o servidor.", 'ai');
-            }
+            } catch (e) { aiMsgBox.textContent = "Erro na rede."; }
         }
 
-        function addMsgDOM(txt, role) {
+        function addMsgDOM(txt, role, isTyping) {
             const container = document.getElementById('messages');
             const div = document.createElement('div');
             div.className = `msg-row ${role === 'user' ? 'user' : 'ai'}`;
-            div.innerHTML = `
-                <div class="msg-label">${role === 'user' ? 'Você' : 'ClassBot'}</div>
-                <div class="msg-content">${txt}</div>
-            `;
+            div.innerHTML = `<div class="msg-label">${role === 'user' ? 'Você' : 'ClassBot'}</div><div class="msg-content"></div>`;
+            const contentDiv = div.querySelector('.msg-content');
+            
+            if (role === 'user' || !isTyping) contentDiv.textContent = txt;
+            else contentDiv.textContent = "...";
+            
             container.appendChild(div);
             container.scrollTop = container.scrollHeight;
+            return contentDiv;
         }
 
         document.getElementById('sendBtn').onclick = enviar;
