@@ -9,7 +9,6 @@
         :root { --primary: #007bff; --bg: #1e1e1e; --sidebar: #121212; --card: #2d2d2d; --white: #ffffff; }
         * { box-sizing: border-box; font-family: 'Montserrat', sans-serif; margin: 0; padding: 0; }
         
-        /* Ajuste para não esconder nada no celular */
         body, html { height: 100dvh; width: 100%; background: var(--bg); color: var(--white); overflow: hidden; display: flex; position: fixed; }
 
         /* Login */
@@ -19,23 +18,23 @@
 
         /* Sidebar */
         #sidebar { width: 280px; background: var(--sidebar); display: flex; flex-direction: column; border-right: 1px solid #333; transition: transform 0.3s ease; z-index: 1000; }
-        .new-chat { margin: 15px; padding: 12px; border: 1px solid #444; border-radius: 8px; cursor: pointer; text-align: center; font-weight: 600; color: white; }
+        .new-chat { margin: 15px; padding: 12px; border: 1px solid #444; border-radius: 8px; cursor: pointer; text-align: center; font-weight: 600; color: white; background: transparent; }
         #chat-list { flex: 1; overflow-y: auto; padding: 0 10px; }
-        .chat-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; margin-bottom: 8px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; color: #ccc; }
+        .chat-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; margin-bottom: 8px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; color: #ccc; }
         .chat-item:hover, .chat-item.active { background: var(--card); color: white; }
-        .btn-delete { color: #555; padding: 5px; margin-left: 10px; cursor: pointer; }
+        .chat-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
 
-        /* Rodapé da Sidebar */
-        .user-footer { padding: 20px; padding-bottom: calc(20px + env(safe-area-inset-bottom)); border-top: 1px solid #333; display: flex; flex-direction: column; gap: 10px; background: #0d0d0d; }
+        /* Rodapé com botão Sair */
+        .user-footer { padding: 20px; padding-bottom: calc(20px + env(safe-area-inset-bottom)); border-top: 1px solid #333; background: #0d0d0d; display: flex; flex-direction: column; gap: 10px; }
         .user-info { font-size: 0.9rem; font-weight: 600; color: var(--primary); display: flex; align-items: center; gap: 8px; }
-        .btn-sair { width: 100%; padding: 10px; background: #ff444422; color: #ff4444; border: 1px solid #ff444444; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 0.75rem; }
+        .btn-sair { width: 100%; padding: 10px; background: #ff444422; color: #ff4444; border: 1px solid #ff444444; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 0.75rem; text-align: center; }
 
-        /* Área Principal */
-        #main { flex: 1; display: flex; flex-direction: column; height: 100dvh; position: relative; }
+        /* Main */
+        #main { flex: 1; display: flex; flex-direction: column; height: 100dvh; }
         header { padding: 15px 20px; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 15px; background: #1e1e1e; padding-top: calc(15px + env(safe-area-inset-top)); }
         .menu-toggle { display: block; cursor: pointer; font-size: 1.5rem; }
         #messages { flex: 1; overflow-y: auto; padding: 20px; width: 100%; max-width: 800px; margin: 0 auto; }
-        .msg-row { display: flex; flex-direction: column; margin-bottom: 25px; }
+        .msg-row { margin-bottom: 25px; }
         .msg-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; color: var(--primary); }
         .msg-content { font-size: 1rem; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
 
@@ -43,7 +42,7 @@
         #input-area { padding: 15px 20px; padding-bottom: calc(15px + env(safe-area-inset-bottom)); width: 100%; max-width: 800px; margin: 0 auto; }
         .input-box { display: flex; background: var(--card); border-radius: 12px; padding: 8px 12px; border: 1px solid #444; align-items: center; }
         #userInput { flex: 1; background: transparent; border: none; color: white; outline: none; font-size: 16px; padding: 8px; }
-        #sendBtn { background: var(--primary); border: none; color: white; width: 40px; height: 40px; border-radius: 8px; cursor: pointer; }
+        #sendBtn { background: var(--primary); border: none; color: white; width: 40px; height: 40px; border-radius: 8px; cursor: pointer; font-weight: bold; }
 
         @media (max-width: 768px) {
             #sidebar { position: fixed; height: 100dvh; left: 0; transform: translateX(-100%); width: 280px; }
@@ -81,7 +80,7 @@
         <div id="messages"></div>
         <div id="input-area">
             <div class="input-box">
-                <input type="text" id="userInput" placeholder="O que vamos aprontar hoje?" autocomplete="off">
+                <input type="text" id="userInput" placeholder="Manda a braba..." autocomplete="off">
                 <button id="sendBtn">↑</button>
             </div>
         </div>
@@ -89,7 +88,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, set, get, child, push, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, get, push, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB0vSCE32XEg0IL6LaRzmlvfa3qj1priPg",
@@ -125,17 +124,15 @@
             if (snap.exists() && snap.val().senha === p) {
                 localStorage.setItem("cb_user", u);
                 location.reload();
-            } else alert("Usuário ou senha incorretos.");
+            } else alert("Usuário ou senha inválidos.");
         };
 
         window.cadastrar = async () => {
             const u = document.getElementById('userLogin').value.trim().toLowerCase();
             const p = document.getElementById('passLogin').value.trim();
-            if(!u || p.length < 3) return alert("Dados inválidos!");
-            const snap = await get(ref(db, `usuarios/${u}`));
-            if (snap.exists()) return alert("Usuário já existe.");
+            if(!u || p.length < 3) return alert("Dados muito curtos!");
             await set(ref(db, `usuarios/${u}`), { senha: p });
-            alert("Conta criada! Agora é só acessar.");
+            alert("Conta criada!");
         };
 
         window.sair = () => { localStorage.clear(); location.reload(); };
@@ -147,7 +144,7 @@
                 if (data) Object.keys(data).reverse().forEach(id => {
                     const item = document.createElement('div');
                     item.className = `chat-item ${id === conversaAtivaId ? 'active' : ''}`;
-                    item.innerHTML = `<span onclick="abrirConversa('${id}')">${data[id][0]?.content || "..." }</span><div onclick="excluirConversa('${id}')">🗑</div>`;
+                    item.innerHTML = `<span onclick="abrirConversa('${id}')">${data[id][0]?.content || "..."}</span><div onclick="excluirConversa('${id}')">🗑</div>`;
                     list.appendChild(item);
                 });
             });
@@ -162,7 +159,7 @@
             if(window.innerWidth <= 768) toggleMenu();
         };
 
-        window.excluirConversa = async (id) => { if(confirm("Apagar conversa?")) { await remove(ref(db, `conversas/${usuario}/${id}`)); if(conversaAtivaId === id) novaConversa(); } };
+        window.excluirConversa = async (id) => { if(confirm("Apagar?")) { await remove(ref(db, `conversas/${usuario}/${id}`)); if(conversaAtivaId === id) novaConversa(); } };
 
         function renderizar() {
             const c = document.getElementById('messages'); c.innerHTML = "";
@@ -180,7 +177,7 @@
         async function enviar() {
             const input = document.getElementById('userInput');
             const text = input.value.trim();
-            if (!text) return;
+            if (!text || !usuario) return;
             if (!conversaAtivaId) conversaAtivaId = push(ref(db, `conversas/${usuario}`)).key;
             input.value = '';
             addMsgDOM(text, 'user', false);
@@ -190,7 +187,7 @@
                 const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mensagens: historico.slice(-6) }) });
                 const data = await res.json();
                 if (data.answer) { digitarTexto(box, data.answer); historico.push({ role: "assistant", content: data.answer }); await set(ref(db, `conversas/${usuario}/${conversaAtivaId}`), historico); }
-            } catch (e) { box.textContent = "Erro!"; }
+            } catch (e) { box.textContent = "Erro na API."; }
         }
 
         function addMsgDOM(txt, role, typing) {
