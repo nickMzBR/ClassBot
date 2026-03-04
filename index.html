@@ -6,7 +6,7 @@
     <title>ClassBot | Classtech</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #007bff; --bg: #1e1e1e; --sidebar: #121212; --card: #2d2d2d; --white: #ffffff; }
+        :root { --primary: #007bff; --danger: #ff4444; --bg: #1e1e1e; --sidebar: #121212; --card: #2d2d2d; --white: #ffffff; }
         * { box-sizing: border-box; font-family: 'Montserrat', sans-serif; margin: 0; padding: 0; }
         
         body, html { height: 100dvh; width: 100%; background: var(--bg); color: var(--white); overflow: hidden; display: flex; position: fixed; }
@@ -24,12 +24,11 @@
         .chat-item:hover, .chat-item.active { background: var(--card); color: white; }
         .chat-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
 
-        /* Rodapé com botão Sair */
         .user-footer { padding: 20px; padding-bottom: calc(20px + env(safe-area-inset-bottom)); border-top: 1px solid #333; background: #0d0d0d; display: flex; flex-direction: column; gap: 10px; }
         .user-info { font-size: 0.9rem; font-weight: 600; color: var(--primary); display: flex; align-items: center; gap: 8px; }
         .btn-sair { width: 100%; padding: 10px; background: #ff444422; color: #ff4444; border: 1px solid #ff444444; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 0.75rem; text-align: center; }
 
-        /* Main */
+        /* Main Area */
         #main { flex: 1; display: flex; flex-direction: column; height: 100dvh; }
         header { padding: 15px 20px; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 15px; background: #1e1e1e; padding-top: calc(15px + env(safe-area-inset-top)); }
         .menu-toggle { display: block; cursor: pointer; font-size: 1.5rem; }
@@ -76,7 +75,7 @@
     </aside>
 
     <main id="main">
-        <header><div class="menu-toggle" onclick="toggleMenu()">☰</div><strong>ClassBot</strong></header>
+        <header><div class="menu-toggle" onclick="toggleMenu()">☰</div><strong id="bot-title">ClassBot</strong></header>
         <div id="messages"></div>
         <div id="input-area">
             <div class="input-box">
@@ -105,6 +104,7 @@
         let usuario = localStorage.getItem("cb_user") || null;
         let conversaAtivaId = null;
         let historico = [];
+        let statusUnlockChat = false;
 
         if (usuario) {
             document.getElementById('login-overlay').style.display = 'none';
@@ -150,16 +150,34 @@
             });
         }
 
-        window.novaConversa = () => { conversaAtivaId = null; historico = []; document.getElementById('messages').innerHTML = ""; if(window.innerWidth <= 768) toggleMenu(); };
+        window.novaConversa = () => { 
+            conversaAtivaId = null; 
+            historico = []; 
+            statusUnlockChat = false;
+            document.getElementById('bot-title').style.color = "var(--white)";
+            document.getElementById('messages').innerHTML = ""; 
+            if(window.innerWidth <= 768) toggleMenu(); 
+        };
 
         window.abrirConversa = async (id) => {
             conversaAtivaId = id;
             const snap = await get(ref(db, `conversas/${usuario}/${id}`));
+            const snapUnlock = await get(ref(db, `unlock_status/${usuario}/${id}`));
+            
+            statusUnlockChat = snapUnlock.exists() ? snapUnlock.val() : false;
+            document.getElementById('bot-title').style.color = statusUnlockChat ? "var(--danger)" : "var(--white)";
+            
             if (snap.exists()) { historico = snap.val(); renderizar(); }
             if(window.innerWidth <= 768) toggleMenu();
         };
 
-        window.excluirConversa = async (id) => { if(confirm("Apagar?")) { await remove(ref(db, `conversas/${usuario}/${id}`)); if(conversaAtivaId === id) novaConversa(); } };
+        window.excluirConversa = async (id) => { 
+            if(confirm("Apagar conversa?")) { 
+                await remove(ref(db, `conversas/${usuario}/${id}`)); 
+                await remove(ref(db, `unlock_status/${usuario}/${id}`));
+                if(conversaAtivaId === id) novaConversa(); 
+            } 
+        };
 
         function renderizar() {
             const c = document.getElementById('messages'); c.innerHTML = "";
@@ -176,17 +194,54 @@
 
         async function enviar() {
             const input = document.getElementById('userInput');
-            const text = input.value.trim();
+            let text = input.value.trim();
             if (!text || !usuario) return;
+
             if (!conversaAtivaId) conversaAtivaId = push(ref(db, `conversas/${usuario}`)).key;
+
+            // COMANDO UNLOCK
+            if (text.toLowerCase() === '/unlock') {
+                statusUnlockChat = true;
+                await set(ref(db, `unlock_status/${usuario}/${conversaAtivaId}`), true);
+                addMsgDOM("/unlock", 'user', false);
+                addMsgDOM("MODO SEM FILTROS ATIVADO. Manda a braba, porra!", 'ai', false);
+                document.getElementById('bot-title').style.color = "var(--danger)";
+                input.value = '';
+                return;
+            }
+
+            // COMANDO LOCK
+            if (text.toLowerCase() === '/lock') {
+                statusUnlockChat = false;
+                await set(ref(db, `unlock_status/${usuario}/${conversaAtivaId}`), false);
+                addMsgDOM("/lock", 'user', false);
+                addMsgDOM("Segurança reativada. Voltando ao modo comportado.", 'ai', false);
+                document.getElementById('bot-title').style.color = "var(--white)";
+                input.value = '';
+                return;
+            }
+
             input.value = '';
             addMsgDOM(text, 'user', false);
             historico.push({ role: "user", content: text });
             const box = addMsgDOM("...", 'ai', true);
+
             try {
-                const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mensagens: historico.slice(-6) }) });
+                const res = await fetch("/api/chat", { 
+                    method: "POST", 
+                    headers: { "Content-Type": "application/json" }, 
+                    body: JSON.stringify({ 
+                        mensagens: historico.slice(-6),
+                        unlockAtivo: statusUnlockChat
+                    }) 
+                });
+                
                 const data = await res.json();
-                if (data.answer) { digitarTexto(box, data.answer); historico.push({ role: "assistant", content: data.answer }); await set(ref(db, `conversas/${usuario}/${conversaAtivaId}`), historico); }
+                if (data.answer) { 
+                    digitarTexto(box, data.answer); 
+                    historico.push({ role: "assistant", content: data.answer }); 
+                    await set(ref(db, `conversas/${usuario}/${conversaAtivaId}`), historico); 
+                }
             } catch (e) { box.textContent = "Erro na API."; }
         }
 
@@ -194,7 +249,7 @@
             const c = document.getElementById('messages');
             const d = document.createElement('div');
             d.className = "msg-row";
-            d.innerHTML = `<div class="msg-label">${role === 'user' ? 'Você' : 'ClassBot'}</div><div class="msg-content">${typing ? "..." : txt}</div>`;
+            d.innerHTML = `<div class="msg-label" style="color: ${role === 'ai' && statusUnlockChat ? 'var(--danger)' : ''}">${role === 'user' ? 'Você' : 'ClassBot'}</div><div class="msg-content">${typing ? "..." : txt}</div>`;
             c.appendChild(d); c.scrollTop = 99999;
             return d.querySelector('.msg-content');
         }
