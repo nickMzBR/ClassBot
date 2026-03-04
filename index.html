@@ -2,57 +2,84 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>ClassBot | Classtech</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #007bff; --bg: #1e1e1e; --sidebar: #121212; --card: #2d2d2d; --white: #ffffff; --hover: #353535; }
+        :root { 
+            --primary: #007bff; 
+            --bg: #1e1e1e; 
+            --sidebar: #121212; 
+            --card: #2d2d2d; 
+            --white: #ffffff; 
+            --hover: #353535; 
+        }
+
         * { box-sizing: border-box; font-family: 'Montserrat', sans-serif; margin: 0; padding: 0; }
-        body, html { height: 100vh; background: var(--bg); color: var(--white); overflow: hidden; display: flex; }
+
+        /* Ajuste crítico para Mobile: dVherit evita que os botões do sistema escondam o site */
+        body, html { 
+            height: 100dvh; 
+            width: 100%;
+            background: var(--bg); 
+            color: var(--white); 
+            overflow: hidden; 
+            display: flex; 
+            position: fixed; 
+        }
 
         /* Login */
         #login-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .auth-box { width: 90%; max-width: 320px; text-align: center; background: var(--card); padding: 30px; border-radius: 15px; }
         .auth-input { width: 100%; padding: 12px; margin-bottom: 12px; border-radius: 8px; border: 1px solid #444; background: #121212; color: white; outline: none; }
 
-        /* Sidebar */
-        #sidebar { width: 280px; background: var(--sidebar); display: flex; flex-direction: column; border-right: 1px solid #333; transition: transform 0.3s ease; z-index: 1000; }
+        /* Sidebar com Safe Area */
+        #sidebar { 
+            width: 280px; background: var(--sidebar); display: flex; flex-direction: column; 
+            border-right: 1px solid #333; transition: transform 0.3s ease; z-index: 1000;
+        }
+
         .new-chat { margin: 15px; padding: 12px; border: 1px solid #444; border-radius: 8px; cursor: pointer; text-align: center; font-weight: 600; background: transparent; color: white; }
+        
         #chat-list { flex: 1; overflow-y: auto; padding: 0 10px; }
         .chat-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; margin-bottom: 8px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; color: #ccc; }
         .chat-item:hover, .chat-item.active { background: var(--card); color: white; }
         .chat-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
         .btn-delete { color: #555; padding: 5px; margin-left: 10px; }
-        .btn-delete:hover { color: #ff4444; }
 
-        /* Footer Sidebar */
-        .user-footer { padding: 20px; border-top: 1px solid #333; display: flex; flex-direction: column; gap: 10px; background: #0d0d0d; }
+        .user-footer { 
+            padding: 20px; 
+            padding-bottom: calc(20px + env(safe-area-inset-bottom)); /* Espaço para botões do iPhone/Android */
+            border-top: 1px solid #333; display: flex; flex-direction: column; gap: 10px; background: #0d0d0d; 
+        }
         .user-info { font-size: 0.9rem; font-weight: 600; color: var(--primary); display: flex; align-items: center; gap: 8px; }
-        .btn-sair { width: 100%; padding: 10px; background: #ff444422; color: #ff4444; border: 1px solid #ff444444; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 0.75rem; text-align: center; transition: 0.2s; }
-        .btn-sair:hover { background: #ff4444; color: white; }
+        .btn-sair { width: 100%; padding: 10px; background: #ff444422; color: #ff4444; border: 1px solid #ff444444; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 0.75rem; }
 
         /* Main Area */
-        #main { flex: 1; display: flex; flex-direction: column; height: 100vh; position: relative; }
-        header { padding: 15px 20px; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 15px; background: #1e1e1e; }
+        #main { flex: 1; display: flex; flex-direction: column; height: 100dvh; position: relative; }
+        header { padding: 15px 20px; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 15px; background: #1e1e1e; padding-top: calc(15px + env(safe-area-inset-top)); }
         .menu-toggle { display: none; cursor: pointer; font-size: 1.5rem; }
+        
         #messages { flex: 1; overflow-y: auto; padding: 20px; width: 100%; max-width: 800px; margin: 0 auto; }
         .msg-row { display: flex; flex-direction: column; margin-bottom: 25px; width: 100%; }
         .msg-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; color: var(--primary); }
-        .ai .msg-label { color: #888; }
-        .msg-content { font-size: 1rem; line-height: 1.6; white-space: pre-wrap; }
+        .msg-content { font-size: 1rem; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
 
-        /* Input */
-        #input-area { padding: 20px; width: 100%; max-width: 800px; margin: 0 auto; }
-        .input-box { display: flex; background: var(--card); border-radius: 12px; padding: 10px 15px; border: 1px solid #444; align-items: center; }
-        #userInput { flex: 1; background: transparent; border: none; color: white; outline: none; font-size: 16px; padding: 5px; }
-        #sendBtn { background: var(--primary); border: none; color: white; width: 40px; height: 40px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        /* Input Area com Safe Area */
+        #input-area { 
+            padding: 15px 20px; 
+            padding-bottom: calc(15px + env(safe-area-inset-bottom)); 
+            width: 100%; max-width: 800px; margin: 0 auto; 
+        }
+        .input-box { display: flex; background: var(--card); border-radius: 12px; padding: 8px 12px; border: 1px solid #444; align-items: center; }
+        #userInput { flex: 1; background: transparent; border: none; color: white; outline: none; font-size: 16px; padding: 8px; }
+        #sendBtn { background: var(--primary); border: none; color: white; width: 40px; height: 40px; border-radius: 8px; cursor: pointer; flex-shrink: 0; }
 
         @media (max-width: 768px) {
             .menu-toggle { display: block; }
-            #sidebar { position: fixed; height: 100vh; left: 0; transform: translateX(-100%); width: 260px; }
-            #sidebar.open { transform: translateX(0); }
-            #messages, #input-area { width: 100%; padding: 15px; }
-            .overlay-active { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 900; display: none; }
+            #sidebar { position: fixed; height: 100dvh; left: 0; transform: translateX(-100%); width: 280px; }
+            #sidebar.open { transform: translateX(0); box-shadow: 10px 0 50px rgba(0,0,0,0.8); }
+            .overlay-active { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 900; display: none; }
             .overlay-active.show { display: block; }
         }
     </style>
@@ -92,9 +119,7 @@
         <div id="input-area">
             <div class="input-box">
                 <input type="text" id="userInput" placeholder="O que vamos fazer hoje?" autocomplete="off">
-                <button id="sendBtn">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="white"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
-                </button>
+                <button id="sendBtn">↑</button>
             </div>
         </div>
     </main>
@@ -171,7 +196,7 @@
             conversaAtivaId = null;
             historico = [];
             document.getElementById('messages').innerHTML = "";
-            if(window.innerWidth <= 768) toggleMenu();
+            if(window.innerWidth <= 768 && document.getElementById('sidebar').classList.contains('open')) toggleMenu();
         };
 
         window.abrirConversa = async (id) => {
@@ -185,6 +210,7 @@
         };
 
         window.excluirConversa = async (id) => {
+            event.stopPropagation();
             if(confirm("Apagar conversa?")) {
                 await remove(ref(db, `conversas/${usuario}/${id}`));
                 if(conversaAtivaId === id) novaConversa();
@@ -197,7 +223,6 @@
             historico.forEach(m => addMsgDOM(m.content, m.role, false));
         }
 
-        // --- EFEITO DE DIGITAÇÃO ---
         function digitarTexto(elemento, texto) {
             let i = 0; elemento.textContent = "";
             function tipo() {
@@ -205,7 +230,7 @@
                     elemento.textContent += texto.charAt(i);
                     i++;
                     document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
-                    setTimeout(tipo, 15); // Velocidade da digitação
+                    setTimeout(tipo, 15);
                 }
             }
             tipo();
