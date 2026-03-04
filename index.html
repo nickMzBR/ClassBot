@@ -2,103 +2,120 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ClassBot 100%</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
-    <script src="https://unpkg.com/compromise"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPT Style IA</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background-color: #202124; color: #e8eaed; font-family: sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        .header { padding: 15px; font-size: 1.1em; font-weight: bold; color: #4facfe; text-align: center; border-bottom: 1px solid #3c4043; }
-        #chat { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-        .msg { padding: 14px 18px; border-radius: 20px; max-width: 85%; line-height: 1.5; font-size: 16px; }
-        .bot { background: #303134; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid #3c4043; }
-        .user { background: #4facfe; align-self: flex-end; border-bottom-right-radius: 4px; color: white; }
-        .loader { font-size: 0.8em; color: #4facfe; text-align: center; display: none; padding: 10px; }
-        .input-container { background: #202124; padding: 15px; border-top: 1px solid #3c4043; }
-        .input-area { background: #303134; border-radius: 28px; display: flex; padding: 5px 15px; align-items: center; max-width: 700px; margin: 0 auto; border: 1px solid #5f6368; }
-        textarea { flex: 1; background: transparent; border: none; color: white; padding: 12px 0; outline: none; font-size: 16px; resize: none; height: 48px; }
-        button { background: #4facfe; border: none; color: white; width: 42px; height: 42px; border-radius: 50%; cursor: pointer; margin-left: 10px; flex-shrink: 0; }
-        .math-res { color: #81c995; font-weight: bold; display: block; margin-top: 5px; font-family: monospace; }
+        :root {
+            --bg-color: #343541;
+            --sidebar-color: #202123;
+            --user-msg: #343541;
+            --ai-msg: #444654;
+            --text-color: #ececf1;
+        }
+
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-color); }
+        
+        #container { display: flex; height: 100vh; }
+
+        /* Sidebar */
+        #sidebar { width: 260px; background-color: var(--sidebar-color); padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .new-chat { border: 1px solid #4d4d4f; padding: 10px; border-radius: 5px; font-size: 14px; text-align: center; cursor: pointer; }
+
+        /* Chat Area */
+        #chat-main { flex: 1; display: flex; flex-direction: column; position: relative; }
+        #messages { flex: 1; overflow-y: auto; padding-bottom: 150px; }
+        
+        .message { padding: 25px 20%; display: flex; gap: 20px; line-height: 1.6; }
+        .user { background-color: var(--user-msg); }
+        .ai { background-color: var(--ai-msg); border-bottom: 1px solid rgba(0,0,0,0.1); }
+        
+        .avatar { width: 30px; height: 30px; border-radius: 2px; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; }
+        .user .avatar { background: #5436da; }
+        .ai .avatar { background: #19c37d; }
+
+        /* Input Area */
+        #input-area { position: absolute; bottom: 0; width: 100%; padding: 20px 0; background-image: linear-gradient(180deg,rgba(52,53,65,0),#343541 50%); }
+        .input-box { width: 60%; margin: 0 auto; position: relative; }
+        input { width: 100%; background: #40414f; border: 1px solid #303139; color: white; padding: 14px; border-radius: 8px; box-shadow: 0 0 15px rgba(0,0,0,0.1); outline: none; }
     </style>
 </head>
 <body>
 
-    <div class="header">🤖 ClassBot 100% Response</div>
-    <div id="chat">
-        <div class="msg bot">Estou calibrado. Matemática, questões de prova ou textos longos: eu vou responder tudo aqui no chat.</div>
+<div id="container">
+    <div id="sidebar">
+        <div class="new-chat">+ New Chat</div>
+        <div style="font-size: 12px; color: #8e8ea0; margin-top: 20px;">Histórico (Local)</div>
     </div>
-    <div id="loading" class="loader">Processando 100%...</div>
 
-    <div class="input-container">
-        <div class="input-area">
-            <textarea id="pergunta" placeholder="Mande qualquer coisa..."></textarea>
-            <button onclick="buscar()">➤</button>
+    <div id="chat-main">
+        <div id="messages">
+            <div class="message ai">
+                <div class="avatar">AI</div>
+                <div class="content" id="status-text">Estou carregando meus neurônios... aguarde um momento.</div>
+            </div>
+        </div>
+
+        <div id="input-area">
+            <div class="input-box">
+                <input type="text" id="userInput" placeholder="Envie uma temperatura em Celsius..." onkeypress="handleEnter(event)" disabled>
+            </div>
         </div>
     </div>
+</div>
 
 <script>
-    async function buscar() {
-        const input = document.getElementById('pergunta');
-        const chat = document.getElementById('chat');
-        const loader = document.getElementById('loading');
-        const query = input.value.trim();
+    // --- LÓGICA DA IA (TensorFlow.js) ---
+    const model = tf.sequential();
+    model.add(tf.layers.dense({ units: 1, inputShape: [1] }));
+    model.compile({ loss: 'meanSquaredError', optimizer: 'sgd' });
 
-        if (!query) return;
+    const xs = tf.tensor2d([-40, -10, 0, 8, 15, 22, 38], [7, 1]);
+    const ys = tf.tensor2d([-40, 14, 32, 46.4, 59, 71.6, 100.4], [7, 1]);
 
-        chat.innerHTML += `<div class="msg user">${query.substring(0, 100)}...</div>`;
-        input.value = "";
-        loader.style.display = "block";
-        chat.scrollTop = chat.scrollHeight;
-
-        try {
-            // --- 1. FILTRO DE MATEMÁTICA ---
-            const conta = query.replace(/,/g, '.').match(/(\d+[\s\+\-\*\/\^\.\(\)]+\d+)/g);
-            if (conta) {
-                try {
-                    const resMath = math.evaluate(conta[0]);
-                    loader.style.display = "none";
-                    chat.innerHTML += `<div class="msg bot"><b>Cálculo:</b><br><span class="math-res">${conta[0]} = ${resMath}</span></div>`;
-                    chat.scrollTop = chat.scrollHeight;
-                    return;
-                } catch(e) {}
-            }
-
-            // --- 2. QUESTÕES DE PROVA (CONHECIMENTO PRÉVIO) ---
-            if (query.toLowerCase().includes("vergonhosamente")) {
-                loader.style.display = "none";
-                chat.innerHTML += `<div class="msg bot"><b>Gabarito:</b> A alternativa correta é a <b>B</b>. O advérbio indica algo negativo e repreensível.</div>`;
-                chat.scrollTop = chat.scrollHeight;
-                return;
-            }
-
-            // --- 3. BUSCA MULTI-MOTOR (WIKIPEDIA + DEFINIÇÃO) ---
-            const doc = nlp(query);
-            const termo = doc.nouns().out('array')[0] || query.split(' ')[0];
-            
-            const wikiRes = await fetch(`https://pt.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(termo)}`);
-            const wikiData = await wikiRes.json();
-
-            loader.style.display = "none";
-
-            if (wikiData.extract) {
-                chat.innerHTML += `<div class="msg bot"><b>Análise:</b><br>${wikiData.extract}</div>`;
-            } else {
-                // Se tudo falhar, ele usa a inteligência de contexto para não dar erro
-                chat.innerHTML += `<div class="msg bot"><b>Dedução:</b><br>Não encontrei um gabarito exato, mas analisei que sua pergunta foca em <b>${termo}</b>. Geralmente, questões sobre isso abordam conceitos de ${doc.verbs().out('array')[0] || 'definição'}. Verifique a alternativa que melhor descreve essa relação.</div>`;
-            }
-
-        } catch (err) {
-            loader.style.display = "none";
-            chat.innerHTML += `<div class="msg bot"><b>Aviso:</b> O texto é muito complexo para os servidores gratuitos, mas o tema central é <b>${query.substring(0,20)}</b>. Tente perguntar apenas o conceito principal!</div>`;
-        }
-        chat.scrollTop = chat.scrollHeight;
+    async function treinarIA() {
+        await model.fit(xs, ys, { epochs: 500 });
+        document.getElementById('status-text').innerText = "Olá! Sou uma IA treinada localmente. Digite um valor em Celsius e eu converterei para Fahrenheit para você.";
+        document.getElementById('userInput').disabled = false;
     }
 
-    document.getElementById('pergunta').addEventListener('input', function() {
-        this.style.height = 'auto';
-        this.style.height = (this.scrollHeight > 150 ? 150 : this.scrollHeight) + 'px';
-    });
+    function addMessage(text, sender) {
+        const div = document.createElement('div');
+        div.className = `message ${sender}`;
+        div.innerHTML = `
+            <div class="avatar">${sender === 'user' ? 'U' : 'AI'}</div>
+            <div class="content">${text}</div>
+        `;
+        const container = document.getElementById('messages');
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function handleEnter(e) {
+        if (e.key === 'Enter') {
+            const input = document.getElementById('userInput');
+            const valor = parseFloat(input.value);
+            
+            if (!isNaN(valor)) {
+                addMessage(`${valor}°C`, 'user');
+                processar(valor);
+                input.value = '';
+            }
+        }
+    }
+
+    function processar(celsius) {
+        const resultado = tf.tidy(() => {
+            const inputTensor = tf.tensor2d([celsius], [1, 1]);
+            return model.predict(inputTensor).dataSync()[0];
+        });
+
+        setTimeout(() => {
+            addMessage(`Com base no meu treinamento, ${celsius}°C é aproximadamente **${resultado.toFixed(2)}°F**.`, 'ai');
+        }, 500);
+    }
+
+    treinarIA();
 </script>
 
 </body>
