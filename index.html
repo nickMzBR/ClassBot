@@ -7,118 +7,100 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --primary: #007bff; /* Azul vibrante tecnológico */
-            --bg: #f8f9fa; /* Fundo claro e limpo */
+            --primary: #007bff; 
+            --bg: #222; 
+            --card: #2d2d2d; 
             --white: #ffffff;
-            --txt: #212529;
-            --ai-bubble: #e9ecef;
-            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --txt: #e3e3e3;
+            --shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
 
-        * { 
-            box-sizing: border-box; 
-            font-family: 'Montserrat', sans-serif; 
-            -webkit-tap-highlight-color: transparent; 
-        }
+        * { box-sizing: border-box; font-family: 'Montserrat', sans-serif; -webkit-tap-highlight-color: transparent; }
 
         body, html { 
             margin: 0; padding: 0; height: 100vh; 
-            background: var(--bg); color: var(--txt); 
+            background: var(--bg); color: var(--white); 
             display: flex; flex-direction: column;
         }
 
-        /* Header estilo Startup */
         header { 
-            padding: 18px; 
-            text-align: center; 
-            background: var(--white); 
-            color: var(--primary); 
-            font-weight: 700; 
-            font-size: 1.2rem;
-            box-shadow: var(--shadow);
-            z-index: 10;
+            padding: 18px; text-align: center; background: #1a1a1a; 
+            color: var(--primary); font-weight: 700; font-size: 1.2rem;
+            box-shadow: var(--shadow); z-index: 10; border-bottom: 1px solid #333;
         }
 
-        header span { color: #6c757d; font-weight: 400; font-size: 0.9rem; }
+        header span { color: #888; font-weight: 400; font-size: 0.8rem; margin-left: 5px; }
 
-        #messages { 
-            flex: 1; overflow-y: auto; padding: 20px; 
-            display: flex; flex-direction: column; gap: 15px;
-            scroll-behavior: smooth;
-        }
+        #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; }
 
         .msg { 
-            max-width: 80%; padding: 14px 18px; 
-            border-radius: 20px; font-size: 15px; 
-            line-height: 1.6; position: relative;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            max-width: 85%; padding: 14px 18px; border-radius: 20px; font-size: 15px; 
+            line-height: 1.6; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            word-wrap: break-word;
         }
 
-        /* Balão do Usuário - Azul FluentGo */
-        .user { 
-            align-self: flex-end; 
-            background: var(--primary); 
-            color: var(--white);
-            border-bottom-right-radius: 4px;
-        }
+        .user { align-self: flex-end; background: var(--primary); color: var(--white); border-bottom-right-radius: 4px; }
 
-        /* Balão da IA - Minimalista */
-        .ai { 
-            align-self: flex-start; 
-            background: var(--white); 
-            border: 1px solid #dee2e6;
-            border-bottom-left-radius: 4px;
-        }
+        .ai { align-self: flex-start; background: var(--card); color: var(--white); border: 1px solid #3d3d3d; border-bottom-left-radius: 4px; }
 
-        /* Barra de Input Flutuante */
-        #input-area { 
-            padding: 20px; background: transparent;
-        }
+        #input-area { padding: 20px; background: linear-gradient(transparent, var(--bg)); }
 
         .box { 
             max-width: 700px; margin: 0 auto; display: flex; 
-            background: var(--white); border-radius: 50px; 
+            background: var(--card); border-radius: 50px; 
             padding: 8px 10px 8px 22px; align-items: center;
-            box-shadow: var(--shadow);
+            box-shadow: var(--shadow); border: 1px solid #444;
         }
 
-        input { 
-            flex: 1; background: transparent; border: none; 
-            color: var(--txt); outline: none; font-size: 16px; 
-        }
+        input { flex: 1; background: transparent; border: none; color: var(--white); outline: none; font-size: 16px; }
 
         button { 
             background: var(--primary); border: none; color: white; 
             width: 45px; height: 45px; border-radius: 50%; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
-            transition: transform 0.2s;
+            transition: all 0.2s;
         }
 
-        button:active { transform: scale(0.9); }
+        button:active { transform: scale(0.95); }
 
-        /* Estilização da barra de rolagem */
-        #messages::-webkit-scrollbar { width: 4px; }
-        #messages::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+        #messages::-webkit-scrollbar { width: 5px; }
+        #messages::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
     </style>
 </head>
 <body>
-    <header>ClassBot <span>by Classtech</span></header>
+    <header>ClassBot<span>by Classtech</span></header>
     
     <div id="messages">
-        <div class="msg ai">O que você quer agora? Desembucha.</div>
+        <div class="msg ai" id="welcome">E aí, manda. Estou aqui para te ajudar (ou não).</div>
     </div>
 
     <div id="input-area">
         <div class="box">
-            <input type="text" id="userInput" placeholder="Escreva aqui..." autocomplete="off">
+            <input type="text" id="userInput" placeholder="Manda a real..." autocomplete="off">
             <button id="sendBtn">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
             </button>
         </div>
     </div>
 
     <script>
         let historico = [];
+
+        // Função que simula o efeito de digitação
+        function digitarTexto(elemento, texto) {
+            let i = 0;
+            elemento.innerText = ""; // Limpa os "..."
+            
+            function tipo() {
+                if (i < texto.length) {
+                    elemento.innerText += texto.charAt(i);
+                    i++;
+                    scrollDown();
+                    setTimeout(tipo, 15); // Velocidade da digitação (15ms)
+                }
+            }
+            tipo();
+        }
 
         async function enviar() {
             const input = document.getElementById('userInput');
@@ -130,7 +112,7 @@
             
             historico.push({ role: "user", content: text });
 
-            const aiMsg = addMsg("Pensando...", 'ai');
+            const aiMsg = addMsg("...", 'ai');
             scrollDown();
 
             try {
@@ -143,13 +125,14 @@
                 const data = await response.json();
                 
                 if (data.answer) {
-                    aiMsg.innerText = data.answer;
+                    digitarTexto(aiMsg, data.answer); // Aplica o efeito
                     historico.push({ role: "assistant", content: data.answer });
+                } else {
+                    aiMsg.innerText = "Erro no servidor.";
                 }
             } catch (e) {
-                aiMsg.innerText = "Erro na conexão.";
+                aiMsg.innerText = "Sem conexão.";
             }
-            scrollDown();
         }
 
         function addMsg(t, s) {
