@@ -1,7 +1,5 @@
 export default async function handler(req, res) {
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Método não permitido' });
-    }
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Método não permitido' });
 
     const { mensagens } = req.body;
     const apiKey = process.env.GROQ_API_KEY;
@@ -14,30 +12,23 @@ export default async function handler(req, res) {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                model: "llama-3.3-70b-versatile",
+                model: "llama-3.2-11b-vision-preview", // Modelo que aceita imagem
                 messages: [
                     {
                         role: "system",
-                        content: `Você é uma ia dos cara do 8a, voce foi feito pelo classtech 
-                        Você responde sempre em português do Brasil.
-                        PERSONALIDADE: Inteligente, sarcástico e levemente provocador. Fala como um adolescente gênio. 
-                        Usa humor ácido, ironia e demonstra impaciência com perguntas óbvias, mas sempre ajuda. 
-                        Em assuntos sensíveis, responde com empatia real.
-                        ESTILO: Frases curtas, diretas, sem enrolação e sem excesso de emojis.`
+                        content: `Você é o ClassBot, criado pela Classtech (fundada por Red). 
+                        Personalidade: Adolescente gênio, sarcástico, inteligente e direto. 
+                        Se receber uma imagem, analise-a com precisão, mas mantenha o deboche sobre o que está vendo.`
                     },
                     ...mensagens
                 ],
-                temperature: 0.7
+                temperature: 0.7 // Temperatura ajustada conforme pedido
             })
         });
 
         const data = await response.json();
-        if (data.choices && data.choices[0]) {
-            res.status(200).json({ answer: data.choices[0].message.content });
-        } else {
-            res.status(500).json({ answer: "Erro na IA: " + (data.error?.message || "Erro desconhecido") });
-        }
+        res.status(200).json({ answer: data.choices[0].message.content });
     } catch (error) {
-        res.status(500).json({ answer: "Falha na conexão com o servidor." });
+        res.status(500).json({ answer: "Erro ao processar sua imagem ou texto." });
     }
 }
