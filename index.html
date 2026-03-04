@@ -2,32 +2,45 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ClassBot AI | Realtime</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClassBot | Classtech</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #007bff; --bg: #222; --card: #2d2d2d; --white: #ffffff; }
+        :root { --primary: #007bff; --bg: #1e1e1e; --sidebar: #121212; --card: #2d2d2d; --white: #ffffff; }
         * { box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
-        body, html { margin: 0; padding: 0; height: 100vh; background: var(--bg); color: var(--white); display: flex; flex-direction: column; overflow: hidden; }
+        body, html { margin: 0; padding: 0; height: 100vh; background: var(--bg); color: var(--white); display: flex; overflow: hidden; }
 
-        /* Login */
-        #login-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        /* Login Overlay */
+        #login-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .auth-box { width: 85%; max-width: 300px; text-align: center; }
-        .auth-input { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #444; background: #1a1a1a; color: white; outline: none; }
-        .btn-p { width: 100%; background: var(--primary); color: white; padding: 12px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; }
-        .btn-s { background: none; border: none; color: #888; margin-top: 15px; cursor: pointer; font-size: 0.8rem; }
+        .auth-input { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #444; background: #121212; color: white; outline: none; }
 
-        /* App */
-        header { padding: 15px 20px; background: #1a1a1a; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
-        #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-        .msg { max-width: 80%; padding: 12px 16px; border-radius: 18px; font-size: 14px; line-height: 1.4; }
-        .user { align-self: flex-end; background: var(--primary); border-bottom-right-radius: 4px; }
-        .ai { align-self: flex-start; background: var(--card); border: 1px solid #3d3d3d; border-bottom-left-radius: 4px; }
+        /* Sidebar */
+        #sidebar { width: 260px; background: var(--sidebar); display: flex; flex-direction: column; border-right: 1px solid #333; transition: 0.3s; }
+        .new-chat { margin: 15px; padding: 12px; border: 1px solid #444; border-radius: 8px; cursor: pointer; text-align: center; font-weight: 600; transition: 0.2s; }
+        .new-chat:hover { background: #222; }
+        
+        #chat-list { flex: 1; overflow-y: auto; padding: 0 10px; }
+        .chat-item { padding: 10px; margin-bottom: 5px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #ccc; }
+        .chat-item:hover, .chat-item.active { background: #2d2d2d; color: white; }
 
-        #input-area { padding: 15px; background: var(--bg); }
-        .box { max-width: 600px; margin: 0 auto; display: flex; background: var(--card); border-radius: 50px; padding: 5px 5px 5px 20px; border: 1px solid #444; }
-        input[type="text"] { flex: 1; background: transparent; border: none; color: var(--white); outline: none; }
-        #sendBtn { background: var(--primary); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-weight: bold; }
+        .user-footer { padding: 15px; border-top: 1px solid #333; font-size: 0.8rem; display: flex; justify-content: space-between; align-items: center; }
+
+        /* Main Chat Area */
+        #main { flex: 1; display: flex; flex-direction: column; position: relative; }
+        header { padding: 15px 20px; font-weight: 700; color: var(--primary); border-bottom: 1px solid #333; display: flex; align-items: center; }
+        
+        #messages { flex: 1; overflow-y: auto; padding: 40px 15% 20px 15%; display: flex; flex-direction: column; gap: 20px; }
+        .msg { max-width: 90%; padding: 10px 5px; font-size: 15px; line-height: 1.6; }
+        .user { align-self: flex-start; font-weight: 600; border-left: 3px solid var(--primary); padding-left: 15px; }
+        .ai { align-self: flex-start; padding-left: 18px; }
+
+        #input-area { padding: 20px 15% 40px 15%; }
+        .box { display: flex; background: var(--card); border-radius: 15px; padding: 10px 15px; border: 1px solid #444; }
+        input[type="text"] { flex: 1; background: transparent; border: none; color: white; outline: none; font-size: 16px; }
+        #sendBtn { background: var(--primary); border: none; color: white; width: 35px; height: 35px; border-radius: 8px; cursor: pointer; }
+
+        @media (max-width: 768px) { #sidebar { display: none; } #messages, #input-area { padding: 20px; } }
     </style>
 </head>
 <body>
@@ -37,28 +50,34 @@
             <h2 style="color: var(--primary)">ClassBot</h2>
             <input type="text" id="userLogin" class="auth-input" placeholder="Usuário">
             <input type="password" id="passLogin" class="auth-input" placeholder="Senha">
-            <button class="btn-p" onclick="entrar()">Entrar</button>
-            <button class="btn-s" onclick="cadastrar()">Criar Conta</button>
+            <button onclick="entrar()" style="width:100%; padding:12px; background:var(--primary); border:none; border-radius:8px; color:white; font-weight:600; cursor:pointer;">Entrar</button>
+            <button onclick="cadastrar()" style="background:none; border:none; color:#888; margin-top:15px; cursor:pointer; font-size:0.8rem;">Criar conta</button>
         </div>
     </div>
 
-    <header>
-        <div style="font-weight: 700; color: var(--primary)">ClassBot</div>
-        <button onclick="sair()" style="background:none; border:none; color:#ff4444; cursor:pointer; font-size: 0.7rem;">SAIR</button>
-    </header>
-
-    <div id="messages"></div>
-
-    <div id="input-area">
-        <div class="box">
-            <input type="text" id="userInput" placeholder="Manda a real..." autocomplete="off">
-            <button id="sendBtn">↑</button>
+    <aside id="sidebar">
+        <div class="new-chat" onclick="novaConversa()">+ Nova conversa</div>
+        <div id="chat-list"></div>
+        <div class="user-footer">
+            <span id="user-display"></span>
+            <span onclick="sair()" style="color:#ff4444; cursor:pointer;">Sair</span>
         </div>
-    </div>
+    </aside>
+
+    <main id="main">
+        <header>ClassBot</header>
+        <div id="messages"></div>
+        <div id="input-area">
+            <div class="box">
+                <input type="text" id="userInput" placeholder="Manda a real..." autocomplete="off">
+                <button id="sendBtn">↑</button>
+            </div>
+        </div>
+    </main>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, set, get, child, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, get, child, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB0vSCE32XEg0IL6LaRzmlvfa3qj1priPg",
@@ -73,71 +92,82 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        let usuarioLogado = localStorage.getItem("cb_user") || null;
+        let usuario = localStorage.getItem("cb_user") || null;
+        let conversaAtivaId = null;
         let historico = [];
 
-        if (usuarioLogado) {
+        if (usuario) {
             document.getElementById('login-overlay').style.display = 'none';
-            carregarChat();
+            document.getElementById('user-display').textContent = usuario;
+            listarConversas();
         }
+
+        // --- AUTH ---
+        window.entrar = async () => {
+            const u = document.getElementById('userLogin').value.trim().toLowerCase();
+            const p = document.getElementById('passLogin').value;
+            const snap = await get(ref(db, `usuarios/${u}`));
+            if (snap.exists() && snap.val().senha === p) {
+                usuario = u;
+                localStorage.setItem("cb_user", u);
+                location.reload();
+            } else alert("Erro!");
+        };
 
         window.cadastrar = async () => {
             const u = document.getElementById('userLogin').value.trim().toLowerCase();
             const p = document.getElementById('passLogin').value;
-            if(!u || !p) return alert("Preencha tudo!");
+            await set(ref(db, `usuarios/${u}`), { senha: p });
+            alert("Conta criada!");
+        };
 
-            const dbRef = ref(db);
-            const snapshot = await get(child(dbRef, `usuarios/${u}`));
-            
-            if (snapshot.exists()) {
-                alert("Usuário já existe!");
-            } else {
-                await set(ref(db, 'usuarios/' + u), { senha: p });
-                alert("Criado! Agora entre.");
+        window.sair = () => { localStorage.clear(); location.reload(); };
+
+        // --- CONVERSAS ---
+        async function listarConversas() {
+            const snap = await get(ref(db, `conversas/${usuario}`));
+            const list = document.getElementById('chat-list');
+            list.innerHTML = "";
+            if (snap.exists()) {
+                Object.keys(snap.val()).reverse().forEach(id => {
+                    const div = document.createElement('div');
+                    div.className = `chat-item ${id === conversaAtivaId ? 'active' : ''}`;
+                    div.textContent = snap.val()[id][0]?.content || "Conversa vazia";
+                    div.onclick = () => abrirConversa(id);
+                    list.appendChild(div);
+                });
             }
+        }
+
+        window.novaConversa = () => {
+            conversaAtivaId = null;
+            historico = [];
+            document.getElementById('messages').innerHTML = '<div class="msg ai">Nova conversa iniciada. O que manda?</div>';
+            listarConversas();
         };
 
-        window.entrar = async () => {
-            const u = document.getElementById('userLogin').value.trim().toLowerCase();
-            const p = document.getElementById('passLogin').value;
-
-            const dbRef = ref(db);
-            const snapshot = await get(child(dbRef, `usuarios/${u}`));
-
-            if (snapshot.exists() && snapshot.val().senha === p) {
-                usuarioLogado = u;
-                localStorage.setItem("cb_user", u);
-                document.getElementById('login-overlay').style.display = 'none';
-                carregarChat();
-            } else {
-                alert("Erro no login!");
-            }
-        };
-
-        window.sair = () => {
-            localStorage.clear();
-            location.reload();
-        };
-
-        async function carregarChat() {
-            const snapshot = await get(ref(db, 'chats/' + usuarioLogado));
-            if (snapshot.exists()) {
-                historico = snapshot.val() || [];
+        async function abrirConversa(id) {
+            conversaAtivaId = id;
+            const snap = await get(ref(db, `conversas/${usuario}/${id}`));
+            if (snap.exists()) {
+                historico = snap.val();
                 document.getElementById('messages').innerHTML = "";
-                historico.forEach(m => addMsg(m.content, m.role === 'user' ? 'user' : 'ai'));
+                historico.forEach(m => addMsg(m.content, m.role));
+                listarConversas();
             }
         }
 
         async function enviar() {
-            const input = document.getElementById('userInput');
-            const text = input.value.trim();
-            if (!text || !usuarioLogado) return;
+            const text = document.getElementById('userInput').value.trim();
+            if (!text || !usuario) return;
+
+            if (!conversaAtivaId) {
+                conversaAtivaId = push(ref(db, `conversas/${usuario}`)).key;
+            }
 
             addMsg(text, 'user');
-            input.value = '';
-            
+            document.getElementById('userInput').value = '';
             historico.push({ role: "user", content: text });
-            await set(ref(db, 'chats/' + usuarioLogado), historico);
 
             const aiMsg = addMsg("...", 'ai');
 
@@ -148,22 +178,21 @@
                     body: JSON.stringify({ mensagens: historico.slice(-6) })
                 });
                 const data = await response.json();
+                aiMsg.textContent = data.answer;
+                historico.push({ role: "assistant", content: data.answer });
                 
-                if (data.answer) {
-                    aiMsg.textContent = data.answer;
-                    historico.push({ role: "assistant", content: data.answer });
-                    await set(ref(db, 'chats/' + usuarioLogado), historico);
-                }
-            } catch (e) { aiMsg.textContent = "Erro na conexão."; }
+                await set(ref(db, `conversas/${usuario}/${conversaAtivaId}`), historico);
+                listarConversas();
+            } catch (e) { aiMsg.textContent = "Erro!"; }
         }
 
-        function addMsg(t, s) {
+        function addMsg(t, r) {
             const d = document.createElement("div");
-            d.className = `msg ${s}`;
-            d.textContent = t;
-            const container = document.getElementById("messages");
-            container.appendChild(d);
-            container.scrollTop = container.scrollHeight;
+            d.className = `msg ${r === 'user' ? 'user' : 'ai'}`;
+            d.textContent = (r === 'user' ? 'Você: ' : '') + t;
+            const m = document.getElementById("messages");
+            m.appendChild(d);
+            m.scrollTop = m.scrollHeight;
             return d;
         }
 
