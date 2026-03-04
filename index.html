@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ClassBot v3</title>
+    <title>ClassBot AI</title>
     <style>
         :root { --bg: #222; --card: #2d2d2d; --txt: #e3e3e3; --accent: #19c37d; }
         * { box-sizing: border-box; }
@@ -17,7 +17,7 @@
         header { padding: 15px; text-align: center; border-bottom: 1px solid #333; color: var(--accent); font-weight: bold; }
         
         #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; padding-bottom: 120px; }
-        .msg { max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 1.5; }
+        .msg { max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 1.5; white-space: pre-wrap; }
         .user { align-self: flex-end; background: #005fb8; border-bottom-right-radius: 2px; }
         .ai { align-self: flex-start; background: var(--card); border: 1px solid #3d3d3d; border-bottom-left-radius: 2px; }
 
@@ -30,30 +30,30 @@
 <body>
 
     <div id="loader-screen">
-        <h3>ClassBot Inteligente</h3>
+        <h3>ClassBot Generativo</h3>
         <div class="progress-bar"><div id="progress"></div></div>
     </div>
 
     <div id="app">
         <header>ClassBot</header>
         <div id="messages">
-            <div class="msg ai">Oi! Agora eu consigo fazer contas e entender melhor o que você diz. Manda um desafio!</div>
+            <div class="msg ai">Olá! Agora sou uma **IA Generativa de verdade**. Posso conversar sobre qualquer assunto, resolver problemas e criar textos. O que vamos fazer hoje?</div>
         </div>
 
         <div id="input-area">
             <div class="box">
-                <input type="text" id="userInput" placeholder="Quanto é 1+1?">
+                <input type="text" id="userInput" placeholder="Converse com o ClassBot...">
                 <button onclick="enviar()">↑</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Carregamento
+        // Barra de carregamento
         window.onload = () => {
             let p = 0;
             let interval = setInterval(() => {
-                p += 25;
+                p += 20;
                 document.getElementById('progress').style.width = p + '%';
                 if (p >= 100) {
                     clearInterval(interval);
@@ -63,49 +63,47 @@
             }, 100);
         };
 
-        function resolverIA(pergunta) {
-            const texto = pergunta.toLowerCase().replace(/,/g, '.');
+        // CONFIGURAÇÃO DA IA (LLM)
+        const API_KEY = "COLOQUE_SUA_CHAVE_AQUI"; // Pegue em console.groq.com
 
-            // 1. Tentar resolver como matemática
+        async function chamarIA(prompt) {
             try {
-                // Limpa a frase para deixar só números e operadores
-                const expressao = texto.replace(/[a-z?]/g, '').trim();
-                if (expressao && /[0-9]/.test(expressao)) {
-                    const resultado = eval(expressao); // Resolve a conta
-                    if (!isNaN(resultado)) return `O resultado de ${expressao} é ${resultado}.`;
-                }
-            } catch (e) {}
-
-            // 2. Base de conhecimento aprimorada
-            const base = {
-                "oi": "E aí! Tudo certo por aqui, e com você?",
-                "quem e voce": "Sou o ClassBot, sua IA local aprimorada.",
-                "tempo": "Eu não tenho relógio, mas para mim o tempo voa quando converso com você!",
-                "ajuda": "Eu posso fazer contas, responder dúvidas básicas ou só bater papo.",
-                "javascript": "É a linguagem que eu estou usando agora para pensar!",
-                "cor": "Meu estilo é esse fundo #222 com detalhes em verde."
-            };
-
-            for (let chave in base) {
-                if (texto.includes(chave)) return base[chave];
+                const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${API_KEY}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        model: "llama-3.3-70b-versatile",
+                        messages: [
+                            {role: "system", content: "Você é o ClassBot, uma IA generativa inteligente, amigável e prestativa. Responda sempre em Português do Brasil."},
+                            {role: "user", content: prompt}
+                        ],
+                        temperature: 0.7
+                    })
+                });
+                const data = await response.json();
+                return data.choices[0].message.content;
+            } catch (error) {
+                return "Erro ao conectar com meu cérebro. Verifique se a API Key está correta!";
             }
-
-            return `Você perguntou sobre "${pergunta}". Eu ainda estou aprendendo, mas se for uma conta, tente digitar apenas os números!`;
         }
 
         async function enviar() {
             const input = document.getElementById("userInput");
-            if (!input.value.trim()) return;
+            const texto = input.value.trim();
+            if (!texto) return;
 
-            addMsg(input.value, 'user');
-            const resp = resolverIA(input.value);
+            addMsg(texto, 'user');
             input.value = "";
             
-            const aiMsg = addMsg("...", 'ai');
-            setTimeout(() => {
-                aiMsg.innerText = resp;
-                scrollDown();
-            }, 400);
+            const aiMsg = addMsg("ClassBot está digitando...", 'ai');
+            scrollDown();
+
+            const resposta = await chamarIA(texto);
+            aiMsg.innerText = resposta;
+            scrollDown();
         }
 
         function addMsg(t, s) {
@@ -122,7 +120,7 @@
             m.scrollTop = m.scrollHeight;
         }
 
-        // Correção de teclado mobile
+        // Ajuste teclado mobile
         window.visualViewport?.addEventListener('resize', () => {
             document.body.style.height = window.visualViewport.height + 'px';
             scrollDown();
