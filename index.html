@@ -3,116 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ClassBot AI | Classtech</title>
+    <title>ClassBot AI | Realtime</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { 
-            --primary: #007bff; 
-            --bg: #222; 
-            --card: #2d2d2d; 
-            --white: #ffffff;
-            --shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        }
+        :root { --primary: #007bff; --bg: #222; --card: #2d2d2d; --white: #ffffff; }
+        * { box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
+        body, html { margin: 0; padding: 0; height: 100vh; background: var(--bg); color: var(--white); display: flex; flex-direction: column; overflow: hidden; }
 
-        * { box-sizing: border-box; font-family: 'Montserrat', sans-serif; -webkit-tap-highlight-color: transparent; }
+        /* Login */
+        #login-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .auth-box { width: 85%; max-width: 300px; text-align: center; }
+        .auth-input { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #444; background: #1a1a1a; color: white; outline: none; }
+        .btn-p { width: 100%; background: var(--primary); color: white; padding: 12px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; }
+        .btn-s { background: none; border: none; color: #888; margin-top: 15px; cursor: pointer; font-size: 0.8rem; }
 
-        body, html { 
-            margin: 0; padding: 0; height: 100vh; 
-            background: var(--bg); color: var(--white); 
-            display: flex; flex-direction: column; overflow: hidden;
-        }
-
-        /* Overlay de Login */
-        #login-overlay { 
-            position: fixed; inset: 0; background: var(--bg); z-index: 100; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; 
-        }
-
-        #auth-container { width: 85%; max-width: 320px; }
-
-        .auth-input { 
-            width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 10px; 
-            border: 1px solid #444; background: #1a1a1a; color: white; outline: none;
-        }
-
-        .login-btn { 
-            width: 100%; background: var(--primary); color: white; padding: 12px; 
-            border-radius: 10px; border: none; font-weight: 600; cursor: pointer; 
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-        }
-
-        .google-btn { background: var(--white); color: #000; margin-top: 15px; }
-
-        /* App Header */
-        header { 
-            padding: 15px 20px; text-align: center; background: #1a1a1a; 
-            display: flex; justify-content: space-between; align-items: center; 
-            border-bottom: 1px solid #333; box-shadow: var(--shadow);
-        }
-
-        header .title { color: var(--primary); font-weight: 700; font-size: 1.1rem; }
-        
-        #user-info { display: flex; align-items: center; gap: 12px; }
-        #user-info img { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--primary); }
-
-        /* Área de Chat */
-        #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-
-        .msg { 
-            max-width: 85%; padding: 14px 18px; border-radius: 20px; font-size: 14px; 
-            line-height: 1.5; word-wrap: break-word; white-space: pre-wrap; 
-        }
-
+        /* App */
+        header { padding: 15px 20px; background: #1a1a1a; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+        .msg { max-width: 80%; padding: 12px 16px; border-radius: 18px; font-size: 14px; line-height: 1.4; }
         .user { align-self: flex-end; background: var(--primary); border-bottom-right-radius: 4px; }
         .ai { align-self: flex-start; background: var(--card); border: 1px solid #3d3d3d; border-bottom-left-radius: 4px; }
 
-        /* Input Área */
-        #input-area { padding: 20px; background: linear-gradient(transparent, var(--bg)); }
-        .box { 
-            max-width: 700px; margin: 0 auto; display: flex; 
-            background: var(--card); border-radius: 50px; 
-            padding: 6px 6px 6px 22px; border: 1px solid #444; align-items: center;
-        }
-
-        input[type="text"] { flex: 1; background: transparent; border: none; color: var(--white); outline: none; font-size: 16px; }
-
-        #sendBtn { 
-            background: var(--primary); border: none; color: white; 
-            width: 42px; height: 42px; border-radius: 50%; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-        }
-
-        #messages::-webkit-scrollbar { width: 4px; }
-        #messages::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
+        #input-area { padding: 15px; background: var(--bg); }
+        .box { max-width: 600px; margin: 0 auto; display: flex; background: var(--card); border-radius: 50px; padding: 5px 5px 5px 20px; border: 1px solid #444; }
+        input[type="text"] { flex: 1; background: transparent; border: none; color: var(--white); outline: none; }
+        #sendBtn { background: var(--primary); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div id="login-overlay">
-        <h2 style="color: var(--primary); margin-bottom: 5px;">ClassBot</h2>
-        <p style="font-size: 0.8rem; color: #888; margin-bottom: 25px;">by Classtech</p>
-        
-        <div id="auth-container">
-            <input type="email" id="email" class="auth-input" placeholder="Seu e-mail">
-            <input type="password" id="password" class="auth-input" placeholder="Sua senha">
-            
-            <button class="login-btn" onclick="loginEmail()">Entrar</button>
-            <button onclick="cadastrarEmail()" style="background:none; border:none; color:#888; margin-top:12px; cursor:pointer; font-size:0.75rem;">Não tem conta? Cadastre-se agora</button>
-            
-            <div style="margin: 20px 0; color: #444; font-size: 0.8rem;">OU</div>
-            
-            <button class="login-btn google-btn" onclick="loginGoogle()">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/pwa/google.svg" width="18"> Entrar com Google
-            </button>
+        <div class="auth-box">
+            <h2 style="color: var(--primary)">ClassBot</h2>
+            <input type="text" id="userLogin" class="auth-input" placeholder="Usuário">
+            <input type="password" id="passLogin" class="auth-input" placeholder="Senha">
+            <button class="btn-p" onclick="entrar()">Entrar</button>
+            <button class="btn-s" onclick="cadastrar()">Criar Conta</button>
         </div>
     </div>
 
     <header>
-        <div class="title">ClassBot</div>
-        <div id="user-info">
-            <button onclick="logout()" style="background:none; border:none; color:#888; cursor:pointer; font-size:0.7rem; margin-right: 10px;">Sair</button>
-            <div id="user-pfp"></div>
-        </div>
+        <div style="font-weight: 700; color: var(--primary)">ClassBot</div>
+        <button onclick="sair()" style="background:none; border:none; color:#ff4444; cursor:pointer; font-size: 0.7rem;">SAIR</button>
     </header>
 
     <div id="messages"></div>
@@ -120,20 +52,18 @@
     <div id="input-area">
         <div class="box">
             <input type="text" id="userInput" placeholder="Manda a real..." autocomplete="off">
-            <button id="sendBtn">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
-            </button>
+            <button id="sendBtn">↑</button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getDatabase, ref, set, get, child, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB0vSCE32XEg0IL6LaRzmlvfa3qj1priPg",
             authDomain: "classbot-807d8.firebaseapp.com",
+            databaseURL: "https://classbot-807d8-default-rtdb.firebaseio.com/",
             projectId: "classbot-807d8",
             storageBucket: "classbot-807d8.firebasestorage.app",
             messagingSenderId: "117494419469",
@@ -141,109 +71,88 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const provider = new GoogleAuthProvider();
+        const db = getDatabase(app);
 
-        let currentUser = null;
+        let usuarioLogado = localStorage.getItem("cb_user") || null;
         let historico = [];
 
-        // --- AUTH ---
-        window.loginGoogle = async () => {
-            try { await signInWithPopup(auth, provider); } catch (e) { alert(e.message); }
-        };
+        if (usuarioLogado) {
+            document.getElementById('login-overlay').style.display = 'none';
+            carregarChat();
+        }
 
-        window.loginEmail = async () => {
-            const e = document.getElementById('email').value;
-            const s = document.getElementById('password').value;
-            try { await signInWithEmailAndPassword(auth, e, s); } catch (err) { alert("E-mail ou senha inválidos."); }
-        };
+        window.cadastrar = async () => {
+            const u = document.getElementById('userLogin').value.trim().toLowerCase();
+            const p = document.getElementById('passLogin').value;
+            if(!u || !p) return alert("Preencha tudo!");
 
-        window.cadastrarEmail = async () => {
-            const e = document.getElementById('email').value;
-            const s = document.getElementById('password').value;
-            if (s.length < 6) return alert("Senha muito curta (mínimo 6 caracteres).");
-            try { 
-                await createUserWithEmailAndPassword(auth, e, s);
-                alert("Conta criada com sucesso!");
-            } catch (err) { alert(err.message); }
-        };
-
-        window.logout = () => signOut(auth).then(() => location.reload());
-
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                currentUser = user;
-                document.getElementById('login-overlay').style.display = 'none';
-                if(user.photoURL) document.getElementById('user-pfp').innerHTML = `<img src="${user.photoURL}">`;
-                await carregarHistorico();
+            const dbRef = ref(db);
+            const snapshot = await get(child(dbRef, `usuarios/${u}`));
+            
+            if (snapshot.exists()) {
+                alert("Usuário já existe!");
+            } else {
+                await set(ref(db, 'usuarios/' + u), { senha: p });
+                alert("Criado! Agora entre.");
             }
-        });
+        };
 
-        // --- FIRESTORE ---
-        async function carregarHistorico() {
-            const docRef = doc(db, "chats", currentUser.uid);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                historico = docSnap.data().mensagens || [];
+        window.entrar = async () => {
+            const u = document.getElementById('userLogin').value.trim().toLowerCase();
+            const p = document.getElementById('passLogin').value;
+
+            const dbRef = ref(db);
+            const snapshot = await get(child(dbRef, `usuarios/${u}`));
+
+            if (snapshot.exists() && snapshot.val().senha === p) {
+                usuarioLogado = u;
+                localStorage.setItem("cb_user", u);
+                document.getElementById('login-overlay').style.display = 'none';
+                carregarChat();
+            } else {
+                alert("Erro no login!");
+            }
+        };
+
+        window.sair = () => {
+            localStorage.clear();
+            location.reload();
+        };
+
+        async function carregarChat() {
+            const snapshot = await get(ref(db, 'chats/' + usuarioLogado));
+            if (snapshot.exists()) {
+                historico = snapshot.val() || [];
                 document.getElementById('messages').innerHTML = "";
                 historico.forEach(m => addMsg(m.content, m.role === 'user' ? 'user' : 'ai'));
-            } else {
-                addMsg("Histórico carregado. O que vamos programar hoje?", "ai");
             }
-        }
-
-        async function salvarMensagem(role, content) {
-            const docRef = doc(db, "chats", currentUser.uid);
-            const docSnap = await getDoc(docRef);
-            if (!docSnap.exists()) {
-                await setDoc(docRef, { mensagens: [{ role, content }] });
-            } else {
-                await updateDoc(docRef, { mensagens: arrayUnion({ role, content }) });
-            }
-        }
-
-        // --- CHAT LOGIC ---
-        function digitarTexto(elemento, texto) {
-            let i = 0; elemento.textContent = "";
-            function tipo() {
-                if (i < texto.length) {
-                    elemento.textContent += texto.charAt(i);
-                    i++;
-                    document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
-                    setTimeout(tipo, 10);
-                }
-            }
-            tipo();
         }
 
         async function enviar() {
             const input = document.getElementById('userInput');
             const text = input.value.trim();
-            if (!text || !currentUser) return;
+            if (!text || !usuarioLogado) return;
 
             addMsg(text, 'user');
             input.value = '';
             
-            await salvarMensagem("user", text);
             historico.push({ role: "user", content: text });
+            await set(ref(db, 'chats/' + usuarioLogado), historico);
 
             const aiMsg = addMsg("...", 'ai');
-            const mContainer = document.getElementById("messages");
-            mContainer.scrollTop = mContainer.scrollHeight;
 
             try {
                 const response = await fetch("/api/chat", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ mensagens: historico.slice(-8) })
+                    body: JSON.stringify({ mensagens: historico.slice(-6) })
                 });
                 const data = await response.json();
                 
                 if (data.answer) {
-                    digitarTexto(aiMsg, data.answer);
+                    aiMsg.textContent = data.answer;
                     historico.push({ role: "assistant", content: data.answer });
-                    await salvarMensagem("assistant", data.answer);
+                    await set(ref(db, 'chats/' + usuarioLogado), historico);
                 }
             } catch (e) { aiMsg.textContent = "Erro na conexão."; }
         }
@@ -252,8 +161,9 @@
             const d = document.createElement("div");
             d.className = `msg ${s}`;
             d.textContent = t;
-            document.getElementById("messages").appendChild(d);
-            document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
+            const container = document.getElementById("messages");
+            container.appendChild(d);
+            container.scrollTop = container.scrollHeight;
             return d;
         }
 
