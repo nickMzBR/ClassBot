@@ -3,30 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ClassBot Ultra</title>
+    <title>ClassBot v3</title>
     <style>
         :root { --bg: #222; --card: #2d2d2d; --txt: #e3e3e3; --accent: #19c37d; }
         * { box-sizing: border-box; }
         body, html { margin: 0; padding: 0; height: 100vh; background: var(--bg); color: var(--txt); font-family: sans-serif; overflow: hidden; }
         
-        /* Barra de Carregamento Superior */
         #loader-screen { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.5s; }
         .progress-bar { width: 70%; height: 6px; background: #333; border-radius: 10px; overflow: hidden; margin-top: 15px; }
         #progress { width: 0%; height: 100%; background: linear-gradient(90deg, #4285f4, var(--accent)); transition: 0.2s; }
 
         #app { display: flex; flex-direction: column; height: 100%; }
-        header { padding: 15px; text-align: center; border-bottom: 1px solid #333; color: var(--accent); font-weight: bold; font-size: 1.2rem; }
+        header { padding: 15px; text-align: center; border-bottom: 1px solid #333; color: var(--accent); font-weight: bold; }
         
         #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; padding-bottom: 120px; }
         .msg { max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 1.5; }
         .user { align-self: flex-end; background: #005fb8; border-bottom-right-radius: 2px; }
         .ai { align-self: flex-start; background: var(--card); border: 1px solid #3d3d3d; border-bottom-left-radius: 2px; }
 
-        /* Input Robusto (PC e Celular) */
         #input-area { position: fixed; bottom: 0; width: 100%; background: var(--bg); padding: 15px; border-top: 1px solid #333; }
         .box { max-width: 800px; margin: 0 auto; display: flex; background: #333; border-radius: 30px; padding: 5px 15px; align-items: center; }
         input { flex: 1; background: transparent; border: none; color: white; padding: 12px; outline: none; font-size: 16px; }
-        button { background: var(--accent); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 20px; }
+        button { background: var(--accent); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -34,29 +32,28 @@
     <div id="loader-screen">
         <h3>ClassBot Inteligente</h3>
         <div class="progress-bar"><div id="progress"></div></div>
-        <p style="font-size: 10px; color: #777; margin-top: 8px;">Sincronizando banco de dados universal...</p>
     </div>
 
     <div id="app">
         <header>ClassBot</header>
         <div id="messages">
-            <div class="msg ai">Olá! Sou o <b>ClassBot</b>. Meu banco de dados está online e eu já sei sobre ciência, tecnologia e muito mais. O que quer saber?</div>
+            <div class="msg ai">Oi! Agora eu consigo fazer contas e entender melhor o que você diz. Manda um desafio!</div>
         </div>
 
         <div id="input-area">
             <div class="box">
-                <input type="text" id="userInput" placeholder="Faça uma pergunta...">
+                <input type="text" id="userInput" placeholder="Quanto é 1+1?">
                 <button onclick="enviar()">↑</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Simula a indexação de milhares de tópicos no início
+        // Carregamento
         window.onload = () => {
             let p = 0;
             let interval = setInterval(() => {
-                p += Math.random() * 30;
+                p += 25;
                 document.getElementById('progress').style.width = p + '%';
                 if (p >= 100) {
                     clearInterval(interval);
@@ -66,43 +63,49 @@
             }, 100);
         };
 
-        // Banco de Dados Expandido (O "Saber" da IA)
-        const knowledgeBase = {
-            "universo": "O universo tem cerca de 13,8 bilhões de anos e está em constante expansão.",
-            "internet": "A internet começou como ARPANET nos EUA e hoje conecta bilhões de dispositivos via protocolos TCP/IP.",
-            "ia": "Inteligência Artificial permite que sistemas processem dados e tomem decisões, como eu estou fazendo agora.",
-            "computador": "O primeiro computador programável foi o ENIAC, construído durante a Segunda Guerra Mundial.",
-            "programação": "Programar é dar instruções lógicas para um computador resolver problemas.",
-            "planeta": "Existem oito planetas no nosso sistema solar, sendo Júpiter o maior deles.",
-            "água": "A fórmula química da água é H2O, composta por dois átomos de hidrogênio e um de oxigênio.",
-            "história": "A história humana é dividida em períodos como Antiguidade, Idade Média, Moderna e Contemporânea."
-        };
+        function resolverIA(pergunta) {
+            const texto = pergunta.toLowerCase().replace(/,/g, '.');
 
-        function gerarRespostaInteligente(pergunta) {
-            const p = pergunta.toLowerCase();
-            
-            // Busca por correspondência no banco de dados
-            for (let chave in knowledgeBase) {
-                if (p.includes(chave)) return knowledgeBase[chave];
+            // 1. Tentar resolver como matemática
+            try {
+                // Limpa a frase para deixar só números e operadores
+                const expressao = texto.replace(/[a-z?]/g, '').trim();
+                if (expressao && /[0-9]/.test(expressao)) {
+                    const resultado = eval(expressao); // Resolve a conta
+                    if (!isNaN(resultado)) return `O resultado de ${expressao} é ${resultado}.`;
+                }
+            } catch (e) {}
+
+            // 2. Base de conhecimento aprimorada
+            const base = {
+                "oi": "E aí! Tudo certo por aqui, e com você?",
+                "quem e voce": "Sou o ClassBot, sua IA local aprimorada.",
+                "tempo": "Eu não tenho relógio, mas para mim o tempo voa quando converso com você!",
+                "ajuda": "Eu posso fazer contas, responder dúvidas básicas ou só bater papo.",
+                "javascript": "É a linguagem que eu estou usando agora para pensar!",
+                "cor": "Meu estilo é esse fundo #222 com detalhes em verde."
+            };
+
+            for (let chave in base) {
+                if (texto.includes(chave)) return base[chave];
             }
 
-            // Lógica de fallback para parecer mais inteligente
-            return `Eu processei sua dúvida sobre "${pergunta}". Baseado no meu conhecimento atual, isso envolve conceitos de tecnologia e lógica avançada. Gostaria de aprofundar em algum detalhe específico?`;
+            return `Você perguntou sobre "${pergunta}". Eu ainda estou aprendendo, mas se for uma conta, tente digitar apenas os números!`;
         }
 
         async function enviar() {
             const input = document.getElementById("userInput");
-            const text = input.value.trim();
-            if (!text) return;
+            if (!input.value.trim()) return;
 
-            addMsg(text, 'user');
+            addMsg(input.value, 'user');
+            const resp = resolverIA(input.value);
             input.value = "";
-            const aiMsg = addMsg("Consultando banco de dados...", 'ai');
-
+            
+            const aiMsg = addMsg("...", 'ai');
             setTimeout(() => {
-                aiMsg.innerText = gerarRespostaInteligente(text);
+                aiMsg.innerText = resp;
                 scrollDown();
-            }, 600);
+            }, 400);
         }
 
         function addMsg(t, s) {
@@ -119,13 +122,11 @@
             m.scrollTop = m.scrollHeight;
         }
 
-        // Correção de teclado para Celular e PC
-        if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', () => {
-                document.body.style.height = window.visualViewport.height + 'px';
-                scrollDown();
-            });
-        }
+        // Correção de teclado mobile
+        window.visualViewport?.addEventListener('resize', () => {
+            document.body.style.height = window.visualViewport.height + 'px';
+            scrollDown();
+        });
     </script>
 </body>
 </html>
