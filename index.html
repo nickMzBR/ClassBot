@@ -3,106 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ClassBot AI</title>
+    <title>ClassBot Xenova</title>
     <style>
         :root { --bg: #222; --card: #2d2d2d; --txt: #e3e3e3; --accent: #19c37d; }
-        * { box-sizing: border-box; }
-        body, html { margin: 0; padding: 0; height: 100vh; background: var(--bg); color: var(--txt); font-family: sans-serif; overflow: hidden; }
-        
-        #loader-screen { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.5s; }
-        .progress-bar { width: 70%; height: 6px; background: #333; border-radius: 10px; overflow: hidden; margin-top: 15px; }
-        #progress { width: 0%; height: 100%; background: linear-gradient(90deg, #4285f4, var(--accent)); transition: 0.2s; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body, html { margin: 0; padding: 0; height: 100vh; background: var(--bg); color: var(--txt); overflow: hidden; }
+
+        /* Tela de Carregamento */
+        #loader { 
+            position: fixed; inset: 0; background: var(--bg); z-index: 100; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+        }
+        .progress-container { width: 70%; background: #333; height: 8px; border-radius: 10px; margin-top: 20px; overflow: hidden; }
+        #bar { width: 0%; height: 100%; background: var(--accent); transition: width 0.3s; }
 
         #app { display: flex; flex-direction: column; height: 100%; }
         header { padding: 15px; text-align: center; border-bottom: 1px solid #333; color: var(--accent); font-weight: bold; }
+        #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; padding-bottom: 100px; }
         
-        #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; padding-bottom: 120px; }
-        .msg { max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 1.5; white-space: pre-wrap; }
+        .msg { max-width: 85%; padding: 12px; border-radius: 15px; font-size: 15px; line-height: 1.5; }
         .user { align-self: flex-end; background: #005fb8; border-bottom-right-radius: 2px; }
         .ai { align-self: flex-start; background: var(--card); border: 1px solid #3d3d3d; border-bottom-left-radius: 2px; }
 
         #input-area { position: fixed; bottom: 0; width: 100%; background: var(--bg); padding: 15px; border-top: 1px solid #333; }
-        .box { max-width: 800px; margin: 0 auto; display: flex; background: #333; border-radius: 30px; padding: 5px 15px; align-items: center; }
-        input { flex: 1; background: transparent; border: none; color: white; padding: 12px; outline: none; font-size: 16px; }
+        .box { max-width: 800px; margin: 0 auto; display: flex; background: #333; border-radius: 30px; padding: 5px 15px; }
+        input { flex: 1; background: transparent; border: none; color: white; padding: 12px; outline: none; }
         button { background: var(--accent); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div id="loader-screen">
-        <h3>ClassBot Generativo</h3>
-        <div class="progress-bar"><div id="progress"></div></div>
+    <div id="loader">
+        <h3 id="status">Carregando Inteligência...</h3>
+        <div class="progress-container"><div id="bar"></div></div>
+        <p style="font-size: 12px; color: #777; margin-top: 10px;">Isso só acontece na primeira vez (aprox. 30MB)</p>
     </div>
 
     <div id="app">
-        <header>ClassBot</header>
+        <header>ClassBot Xenova</header>
         <div id="messages">
-            <div class="msg ai">Olá! Agora sou uma **IA Generativa de verdade**. Posso conversar sobre qualquer assunto, resolver problemas e criar textos. O que vamos fazer hoje?</div>
+            <div class="msg ai">Olá! Sou o **ClassBot**. Eu rodo totalmente no seu dispositivo via Xenova. Como posso ajudar?</div>
         </div>
-
         <div id="input-area">
             <div class="box">
-                <input type="text" id="userInput" placeholder="Converse com o ClassBot...">
-                <button onclick="enviar()">↑</button>
+                <input type="text" id="userInput" placeholder="Mande uma mensagem...">
+                <button id="sendBtn">↑</button>
             </div>
         </div>
     </div>
 
-    <script>
-        // Barra de carregamento
-        window.onload = () => {
-            let p = 0;
-            let interval = setInterval(() => {
-                p += 20;
-                document.getElementById('progress').style.width = p + '%';
-                if (p >= 100) {
-                    clearInterval(interval);
-                    document.getElementById('loader-screen').style.opacity = '0';
-                    setTimeout(() => document.getElementById('loader-screen').style.display = 'none', 500);
-                }
-            }, 100);
-        };
+    <script type="module">
+        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1';
 
-        // CONFIGURAÇÃO DA IA (LLM)
-        const API_KEY = "COLOQUE_SUA_CHAVE_AQUI"; // Pegue em console.groq.com
+        let chatbot;
+        const bar = document.getElementById('bar');
+        const status = document.getElementById('status');
 
-        async function chamarIA(prompt) {
+        // Inicializa o modelo de forma leve (usando o Qwen-0.5B ou similar)
+        async function init() {
             try {
-                const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${API_KEY}`,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        model: "llama-3.3-70b-versatile",
-                        messages: [
-                            {role: "system", content: "Você é o ClassBot, uma IA generativa inteligente, amigável e prestativa. Responda sempre em Português do Brasil."},
-                            {role: "user", content: prompt}
-                        ],
-                        temperature: 0.7
-                    })
+                chatbot = await pipeline('text-generation', 'Xenova/Qwen1.5-0.5B-Chat', {
+                    progress_callback: (p) => {
+                        if (p.status === 'progress') {
+                            bar.style.width = p.progress + '%';
+                            status.innerText = `Baixando cérebro: ${Math.round(p.progress)}%`;
+                        }
+                    }
                 });
-                const data = await response.json();
-                return data.choices[0].message.content;
-            } catch (error) {
-                return "Erro ao conectar com meu cérebro. Verifique se a API Key está correta!";
+                document.getElementById('loader').style.display = 'none';
+            } catch (e) {
+                status.innerText = "Erro ao carregar no celular. Tente usar o Chrome.";
+                console.error(e);
             }
         }
 
         async function enviar() {
-            const input = document.getElementById("userInput");
-            const texto = input.value.trim();
-            if (!texto) return;
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+            if (!text || !chatbot) return;
 
-            addMsg(texto, 'user');
-            input.value = "";
-            
-            const aiMsg = addMsg("ClassBot está digitando...", 'ai');
-            scrollDown();
+            addMsg(text, 'user');
+            input.value = '';
+            const aiMsg = addMsg("Pensando...", 'ai');
 
-            const resposta = await chamarIA(texto);
-            aiMsg.innerText = resposta;
+            // Gerar resposta generativa real
+            const output = await chatbot(text, { 
+                max_new_tokens: 100,
+                temperature: 0.7,
+                do_sample: true
+            });
+
+            aiMsg.innerText = output[0].generated_text.replace(text, "").trim();
             scrollDown();
         }
 
@@ -120,11 +111,8 @@
             m.scrollTop = m.scrollHeight;
         }
 
-        // Ajuste teclado mobile
-        window.visualViewport?.addEventListener('resize', () => {
-            document.body.style.height = window.visualViewport.height + 'px';
-            scrollDown();
-        });
+        document.getElementById('sendBtn').onclick = enviar;
+        init();
     </script>
 </body>
 </html>
