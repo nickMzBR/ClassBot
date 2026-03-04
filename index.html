@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sala do Futuro</title>
+    <title>ClassBot AI | Classtech</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root { 
@@ -21,6 +21,7 @@
             margin: 0; padding: 0; height: 100vh; 
             background: var(--bg); color: var(--white); 
             display: flex; flex-direction: column;
+            overflow: hidden;
         }
 
         header { 
@@ -31,39 +32,48 @@
 
         header span { color: #888; font-weight: 400; font-size: 0.8rem; margin-left: 5px; }
 
-        #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; }
+        #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
 
         .msg { 
             max-width: 85%; padding: 14px 18px; border-radius: 20px; font-size: 15px; 
             line-height: 1.6; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            word-wrap: break-word;
-            white-space: pre-wrap; /* ESSENCIAL PARA OS ESPAÇOS */
+            word-wrap: break-word; white-space: pre-wrap;
         }
 
         .user { align-self: flex-end; background: var(--primary); color: var(--white); border-bottom-right-radius: 4px; }
-
         .ai { align-self: flex-start; background: var(--card); color: var(--white); border: 1px solid #3d3d3d; border-bottom-left-radius: 4px; }
 
-        #input-area { padding: 20px; background: linear-gradient(transparent, var(--bg)); }
+        /* Preview de Imagem */
+        #preview-container { 
+            display: none; padding: 10px 20px; background: #1a1a1a; 
+            border-top: 1px solid #444; align-items: center; gap: 10px;
+        }
+        #image-preview { height: 60px; border-radius: 8px; border: 1px solid var(--primary); }
+        .remove-img { background: #ff4444; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-size: 12px; }
 
+        /* Área de Input */
+        #input-area { padding: 20px; background: linear-gradient(transparent, var(--bg)); }
         .box { 
             max-width: 700px; margin: 0 auto; display: flex; 
             background: var(--card); border-radius: 50px; 
-            padding: 8px 10px 8px 22px; align-items: center;
+            padding: 8px 10px 8px 15px; align-items: center;
             box-shadow: var(--shadow); border: 1px solid #444;
         }
 
-        input { flex: 1; background: transparent; border: none; color: var(--white); outline: none; font-size: 16px; }
+        input[type="text"] { flex: 1; background: transparent; border: none; color: var(--white); outline: none; font-size: 16px; padding: 0 10px; }
+        
+        .btn-icon { background: none; border: none; color: #888; cursor: pointer; padding: 5px; display: flex; align-items: center; transition: 0.2s; }
+        .btn-icon:hover { color: var(--primary); }
 
-        button { 
+        #sendBtn { 
             background: var(--primary); border: none; color: white; 
             width: 45px; height: 45px; border-radius: 50%; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             transition: all 0.2s;
         }
+        #sendBtn:active { transform: scale(0.95); }
 
-        button:active { transform: scale(0.95); }
-
+        /* Scrollbar */
         #messages::-webkit-scrollbar { width: 5px; }
         #messages::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
     </style>
@@ -72,12 +82,24 @@
     <header>ClassBot<span>by Classtech</span></header>
     
     <div id="messages">
-        <div class="msg ai">Estou aqui para te ajudar</div>
+        <div class="msg ai">E aí. Vai me mandar um código bugado ou uma foto da sua cara de dúvida? Desembucha.</div>
+    </div>
+
+    <div id="preview-container">
+        <img id="image-preview" src="">
+        <button class="remove-img" onclick="cancelarImagem()">×</button>
     </div>
 
     <div id="input-area">
         <div class="box">
-            <input type="text" id="userInput" placeholder="Peça ao ClassBot" autocomplete="off">
+            <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="previewImagem(this)">
+            
+            <button class="btn-icon" onclick="document.getElementById('fileInput').click()">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+            </button>
+
+            <input type="text" id="userInput" placeholder="Manda a real..." autocomplete="off">
+            
             <button id="sendBtn">
                 <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
             </button>
@@ -86,17 +108,39 @@
 
     <script>
         let historico = [];
+        let imagemBase64 = null;
 
+        // Visualização da imagem selecionada
+        function previewImagem(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagemBase64 = e.target.result;
+                    document.getElementById('image-preview').src = imagemBase64;
+                    document.getElementById('preview-container').style.display = 'flex';
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function cancelarImagem() {
+            imagemBase64 = null;
+            document.getElementById('fileInput').value = "";
+            document.getElementById('preview-container').style.display = 'none';
+        }
+
+        // Efeito de digitação respeitando espaços
         function digitarTexto(elemento, texto) {
             let i = 0;
-            elemento.textContent = ""; // Limpa os "..."
-            
+            elemento.textContent = ""; 
             function tipo() {
                 if (i < texto.length) {
-                    elemento.textContent += texto.charAt(i); // textContent preserva espaços perfeitamente
+                    elemento.textContent += texto.charAt(i);
                     i++;
-                    scrollDown();
-                    setTimeout(tipo, 12); // Velocidade de digitação
+                    const m = document.getElementById("messages");
+                    m.scrollTop = m.scrollHeight;
+                    setTimeout(tipo, 12);
                 }
             }
             tipo();
@@ -105,15 +149,23 @@
         async function enviar() {
             const input = document.getElementById('userInput');
             const text = input.value.trim();
-            if (!text) return;
+            if (!text && !imagemBase64) return;
 
-            addMsg(text, 'user');
+            // Mostra a mensagem do usuário na tela
+            addMsg(text || "Enviou uma imagem", 'user');
             input.value = '';
-            
-            historico.push({ role: "user", content: text });
+
+            // Monta o conteúdo para a API (Suporte a Visão)
+            let msgConteudo = [];
+            if (text) msgConteudo.push({ type: "text", text: text });
+            if (imagemBase64) msgConteudo.push({ type: "image_url", image_url: { url: imagemBase64 } });
+
+            historico.push({ role: "user", content: msgConteudo });
+            cancelarImagem();
 
             const aiMsg = addMsg("...", 'ai');
-            scrollDown();
+            const container = document.getElementById("messages");
+            container.scrollTop = container.scrollHeight;
 
             try {
                 const response = await fetch("/api/chat", {
@@ -128,10 +180,10 @@
                     digitarTexto(aiMsg, data.answer);
                     historico.push({ role: "assistant", content: data.answer });
                 } else {
-                    aiMsg.textContent = "Erro no servidor. Tenta de novo.";
+                    aiMsg.textContent = "Deu erro. Tenta de novo.";
                 }
             } catch (e) {
-                aiMsg.textContent = "Sem conexão. Verifica sua internet.";
+                aiMsg.textContent = "Sem conexão.";
             }
         }
 
@@ -141,11 +193,6 @@
             d.textContent = t;
             document.getElementById("messages").appendChild(d);
             return d;
-        }
-
-        function scrollDown() {
-            const m = document.getElementById("messages");
-            m.scrollTop = m.scrollHeight;
         }
 
         document.getElementById('sendBtn').onclick = enviar;
