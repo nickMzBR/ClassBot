@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ClassBot Ultra-Lite</title>
+    <title>ClassBot AI</title>
     <style>
         :root { --bg: #222; --card: #2d2d2d; --txt: #e3e3e3; --accent: #19c37d; }
-        * { box-sizing: border-box; font-family: sans-serif; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
         
         body, html { 
             margin: 0; padding: 0; height: 100vh; 
@@ -14,131 +14,109 @@
             overflow: hidden; display: flex; flex-direction: column;
         }
 
-        /* Tela de Carregamento Rápida */
+        /* Tela de Entrada */
         #loader { 
             position: fixed; inset: 0; background: var(--bg); z-index: 2000; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            transition: opacity 0.4s;
+            transition: opacity 0.5s;
         }
         .progress-box { width: 70%; max-width: 250px; background: #333; height: 6px; border-radius: 10px; margin-top: 15px; overflow: hidden; }
-        #bar { width: 0%; height: 100%; background: var(--accent); transition: width 0.2s; }
-        #status { font-size: 13px; color: var(--accent); font-weight: bold; margin-bottom: 5px; }
+        #bar { width: 0%; height: 100%; background: var(--accent); transition: width 0.4s; }
 
-        header { padding: 15px; text-align: center; border-bottom: 1px solid #333; font-weight: bold; background: #222; }
+        header { padding: 15px; text-align: center; border-bottom: 1px solid #333; font-weight: bold; background: #252525; color: var(--accent); }
 
         #messages { 
-            flex: 1; overflow-y: auto; padding: 15px; 
-            display: flex; flex-direction: column; gap: 12px;
-            padding-bottom: 90px; 
+            flex: 1; overflow-y: auto; padding: 20px; 
+            display: flex; flex-direction: column; gap: 15px;
+            padding-bottom: 100px; 
         }
         
-        .msg { max-width: 85%; padding: 10px 15px; border-radius: 18px; font-size: 15px; line-height: 1.4; word-wrap: break-word; }
+        .msg { max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 1.5; white-space: pre-wrap; }
         .user { align-self: flex-end; background: #005fb8; border-bottom-right-radius: 2px; }
         .ai { align-self: flex-start; background: var(--card); border: 1px solid #3d3d3d; border-bottom-left-radius: 2px; }
 
-        /* Input Bar Fixa */
+        /* Barra de Input */
         #input-area { 
             position: fixed; bottom: 0; width: 100%; 
-            background: var(--bg); padding: 10px;
+            background: var(--bg); padding: 15px;
             border-top: 1px solid #333;
         }
         .box { 
-            max-width: 600px; margin: 0 auto; display: flex; 
-            background: #333; border-radius: 25px; padding: 5px 12px; align-items: center;
+            max-width: 800px; margin: 0 auto; display: flex; 
+            background: #333; border-radius: 30px; padding: 5px 15px; align-items: center;
         }
         input { 
             flex: 1; background: transparent; border: none; 
-            color: white; padding: 8px; outline: none; font-size: 16px; 
+            color: white; padding: 12px; outline: none; font-size: 16px; 
         }
         button { 
             background: var(--accent); border: none; color: white; 
-            width: 35px; height: 35px; border-radius: 50%; cursor: pointer;
-            font-weight: bold; font-size: 18px;
+            width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
+            font-size: 20px; font-weight: bold;
         }
     </style>
 </head>
 <body>
 
     <div id="loader">
-        <div id="status">Iniciando IA Leve...</div>
+        <h3 id="status">Iniciando ClassBot...</h3>
         <div class="progress-box"><div id="bar"></div></div>
-        <p style="font-size: 10px; color: #666; margin-top: 10px;">Otimizado para dispositivos de 4GB RAM</p>
     </div>
 
-    <header>ClassBot Lite</header>
+    <header>ClassBot Pro</header>
     
     <div id="messages">
-        <div class="msg ai">Oi! Agora estou usando um motor ultra-leve. Posso conversar sem travar seu celular. O que quer saber?</div>
+        <div class="msg ai">Olá! Agora sou uma <b>IA Generativa de Elite</b>. Posso conversar sobre qualquer assunto, resolver códigos e ajudar com seus projetos. Como posso ajudar?</div>
     </div>
 
     <div id="input-area">
         <div class="box">
-            <input type="text" id="userInput" placeholder="Diga um 'Oi'..." autocomplete="off">
+            <input type="text" id="userInput" placeholder="Digite sua mensagem..." autocomplete="off">
             <button id="sendBtn">↑</button>
         </div>
     </div>
 
-    <script type="module">
-        import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1';
-
-        // Configurações Anti-Erro
-        env.allowLocalModels = false;
-        env.useBrowserCache = true; 
-
-        let generator;
-        const bar = document.getElementById('bar');
-        const status = document.getElementById('status');
-        const loader = document.getElementById('loader');
-
-        async function initIA() {
-            try {
-                // Modelo SmolLM2-135M: O mais leve da categoria Instruct (ideal p/ mobile)
-                generator = await pipeline('text-generation', 'Xenova/SmolLM2-135M-Instruct', {
-                    progress_callback: (p) => {
-                        if (p.status === 'progress') {
-                            bar.style.width = p.progress + '%';
-                            status.innerText = `Baixando: ${Math.round(p.progress)}%`;
-                        }
-                    }
-                });
-                
-                loader.style.opacity = '0';
-                setTimeout(() => loader.style.display = 'none', 400);
-            } catch (err) {
-                status.innerText = "Erro: Sem memória RAM livre.";
-                console.error(err);
-            }
-        }
+    <script>
+        // Animação de entrada
+        window.onload = () => {
+            const bar = document.getElementById('bar');
+            setTimeout(() => { bar.style.width = '100%'; }, 100);
+            setTimeout(() => { 
+                document.getElementById('loader').style.opacity = '0';
+                setTimeout(() => { document.getElementById('loader').style.display = 'none'; }, 500);
+            }, 800);
+        };
 
         async function enviar() {
             const input = document.getElementById('userInput');
             const text = input.value.trim();
-            if (!text || !generator) return;
+            if (!text) return;
 
             addMsg(text, 'user');
             input.value = '';
             
+            // Criar balão de "pensando"
             const aiMsg = addMsg("...", 'ai');
             scrollDown();
 
-            // Prompt formatado para o modelo Instruct
-            const prompt = `<|im_start|>user\n${text}<|im_end|>\n<|im_start|>assistant\n`;
-
             try {
-                const output = await generator(prompt, { 
-                    max_new_tokens: 60,
-                    temperature: 0.6,
-                    repetition_penalty: 1.2,
-                    do_sample: true,
-                    stop: ["<|im_end|>"]
+                // Chamada para a sua API na Vercel
+                const response = await fetch("/api/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ prompt: text })
                 });
-
-                let fullText = output[0].generated_text;
-                let response = fullText.split('<|im_start|>assistant\n')[1]?.replace('<|im_end|>', '').trim();
                 
-                aiMsg.innerText = response || "Entendi. Pode me contar mais?";
+                const data = await response.json();
+                
+                if (data.answer) {
+                    aiMsg.innerText = data.answer;
+                } else {
+                    aiMsg.innerText = "Erro ao receber resposta da IA.";
+                }
             } catch (e) {
-                aiMsg.innerText = "Ocorreu um erro ao processar. Tente frases curtas.";
+                aiMsg.innerText = "Erro de conexão com o servidor.";
+                console.error(e);
             }
             scrollDown();
         }
@@ -165,8 +143,6 @@
             document.body.style.height = window.visualViewport.height + 'px';
             scrollDown();
         });
-
-        initIA();
     </script>
 </body>
 </html>
