@@ -6,187 +6,62 @@
     <title>ClassBot AI | Classtech</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { 
-            --primary: #007bff; 
-            --bg: #222; 
-            --card: #2d2d2d; 
-            --white: #ffffff;
-            --txt: #e3e3e3;
-            --shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        }
-
+        :root { --primary: #007bff; --bg: #222; --card: #2d2d2d; --white: #ffffff; }
         * { box-sizing: border-box; font-family: 'Montserrat', sans-serif; -webkit-tap-highlight-color: transparent; }
-
-        body, html { 
-            margin: 0; padding: 0; height: 100vh; 
-            background: var(--bg); color: var(--white); 
-            display: flex; flex-direction: column;
-            overflow: hidden;
-        }
-
-        header { 
-            padding: 18px; text-align: center; background: #1a1a1a; 
-            color: var(--primary); font-weight: 700; font-size: 1.2rem;
-            box-shadow: var(--shadow); z-index: 10; border-bottom: 1px solid #333;
-        }
-
-        header span { color: #888; font-weight: 400; font-size: 0.8rem; margin-left: 5px; }
-
+        body, html { margin: 0; padding: 0; height: 100vh; background: var(--bg); color: var(--white); display: flex; flex-direction: column; overflow: hidden; }
+        header { padding: 18px; text-align: center; background: #1a1a1a; color: var(--primary); font-weight: 700; border-bottom: 1px solid #333; }
         #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-
-        .msg { 
-            max-width: 85%; padding: 14px 18px; border-radius: 20px; font-size: 15px; 
-            line-height: 1.6; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            word-wrap: break-word; white-space: pre-wrap;
-        }
-
-        .user { align-self: flex-end; background: var(--primary); color: var(--white); border-bottom-right-radius: 4px; }
-        .ai { align-self: flex-start; background: var(--card); color: var(--white); border: 1px solid #3d3d3d; border-bottom-left-radius: 4px; }
-
-        /* Preview de Imagem */
-        #preview-container { 
-            display: none; padding: 10px 20px; background: #1a1a1a; 
-            border-top: 1px solid #444; align-items: center; gap: 10px;
-        }
-        #image-preview { height: 60px; border-radius: 8px; border: 1px solid var(--primary); }
-        .remove-img { background: #ff4444; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-size: 12px; }
-
-        /* Área de Input */
+        .msg { max-width: 85%; padding: 14px 18px; border-radius: 20px; font-size: 15px; line-height: 1.6; word-wrap: break-word; white-space: pre-wrap; }
+        .user { align-self: flex-end; background: var(--primary); border-bottom-right-radius: 4px; }
+        .ai { align-self: flex-start; background: var(--card); border: 1px solid #3d3d3d; border-bottom-left-radius: 4px; }
         #input-area { padding: 20px; background: linear-gradient(transparent, var(--bg)); }
-        .box { 
-            max-width: 700px; margin: 0 auto; display: flex; 
-            background: var(--card); border-radius: 50px; 
-            padding: 8px 10px 8px 15px; align-items: center;
-            box-shadow: var(--shadow); border: 1px solid #444;
-        }
-
-        input[type="text"] { flex: 1; background: transparent; border: none; color: var(--white); outline: none; font-size: 16px; padding: 0 10px; }
-        
-        .btn-icon { background: none; border: none; color: #888; cursor: pointer; padding: 5px; display: flex; align-items: center; transition: 0.2s; }
-        .btn-icon:hover { color: var(--primary); }
-
-        #sendBtn { 
-            background: var(--primary); border: none; color: white; 
-            width: 45px; height: 45px; border-radius: 50%; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            transition: all 0.2s;
-        }
-        #sendBtn:active { transform: scale(0.95); }
-
-        /* Scrollbar */
-        #messages::-webkit-scrollbar { width: 5px; }
-        #messages::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
+        .box { max-width: 700px; margin: 0 auto; display: flex; background: var(--card); border-radius: 50px; padding: 8px 10px 8px 22px; border: 1px solid #444; }
+        input { flex: 1; background: transparent; border: none; color: var(--white); outline: none; font-size: 16px; }
+        #sendBtn { background: var(--primary); border: none; color: white; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
-    <header>ClassBot<span>by Classtech</span></header>
-    
-    <div id="messages">
-        <div class="msg ai">E aí. Vai me mandar um código bugado ou uma foto da sua cara de dúvida? Desembucha.</div>
-    </div>
-
-    <div id="preview-container">
-        <img id="image-preview" src="">
-        <button class="remove-img" onclick="cancelarImagem()">×</button>
-    </div>
-
+    <header>ClassBot</header>
+    <div id="messages"><div class="msg ai">Voltei ao básico. Sem fotos, só meu intelecto superior. O que você quer?</div></div>
     <div id="input-area">
         <div class="box">
-            <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="previewImagem(this)">
-            
-            <button class="btn-icon" onclick="document.getElementById('fileInput').click()">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
-            </button>
-
             <input type="text" id="userInput" placeholder="Manda a real..." autocomplete="off">
-            
-            <button id="sendBtn">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
-            </button>
+            <button id="sendBtn"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg></button>
         </div>
     </div>
-
     <script>
         let historico = [];
-        let imagemBase64 = null;
-
-        // Visualização da imagem selecionada
-        function previewImagem(input) {
-            const file = input.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    imagemBase64 = e.target.result;
-                    document.getElementById('image-preview').src = imagemBase64;
-                    document.getElementById('preview-container').style.display = 'flex';
-                }
-                reader.readAsDataURL(file);
-            }
-        }
-
-        function cancelarImagem() {
-            imagemBase64 = null;
-            document.getElementById('fileInput').value = "";
-            document.getElementById('preview-container').style.display = 'none';
-        }
-
-        // Efeito de digitação respeitando espaços
         function digitarTexto(elemento, texto) {
-            let i = 0;
-            elemento.textContent = ""; 
+            let i = 0; elemento.textContent = "";
             function tipo() {
                 if (i < texto.length) {
                     elemento.textContent += texto.charAt(i);
                     i++;
-                    const m = document.getElementById("messages");
-                    m.scrollTop = m.scrollHeight;
+                    document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
                     setTimeout(tipo, 12);
                 }
             }
             tipo();
         }
-
         async function enviar() {
             const input = document.getElementById('userInput');
             const text = input.value.trim();
-            if (!text && !imagemBase64) return;
-
-            // Mostra a mensagem do usuário na tela
-            addMsg(text || "Enviou uma imagem", 'user');
+            if (!text) return;
+            addMsg(text, 'user');
             input.value = '';
-
-            // Monta o conteúdo para a API (Suporte a Visão)
-            let msgConteudo = [];
-            if (text) msgConteudo.push({ type: "text", text: text });
-            if (imagemBase64) msgConteudo.push({ type: "image_url", image_url: { url: imagemBase64 } });
-
-            historico.push({ role: "user", content: msgConteudo });
-            cancelarImagem();
-
+            historico.push({ role: "user", content: text });
             const aiMsg = addMsg("...", 'ai');
-            const container = document.getElementById("messages");
-            container.scrollTop = container.scrollHeight;
-
             try {
                 const response = await fetch("/api/chat", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ mensagens: historico })
                 });
-                
                 const data = await response.json();
-                
-                if (data.answer) {
-                    digitarTexto(aiMsg, data.answer);
-                    historico.push({ role: "assistant", content: data.answer });
-                } else {
-                    aiMsg.textContent = "Deu erro. Tenta de novo.";
-                }
-            } catch (e) {
-                aiMsg.textContent = "Sem conexão.";
-            }
+                digitarTexto(aiMsg, data.answer);
+                historico.push({ role: "assistant", content: data.answer });
+            } catch (e) { aiMsg.textContent = "Erro na conexão."; }
         }
-
         function addMsg(t, s) {
             const d = document.createElement("div");
             d.className = `msg ${s}`;
@@ -194,7 +69,6 @@
             document.getElementById("messages").appendChild(d);
             return d;
         }
-
         document.getElementById('sendBtn').onclick = enviar;
         document.getElementById('userInput').onkeypress = (e) => { if(e.key === 'Enter') enviar(); };
     </script>
