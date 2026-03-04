@@ -9,7 +9,7 @@
         * { box-sizing: border-box; }
         body, html { margin: 0; padding: 0; height: 100vh; background: var(--bg); color: var(--txt); font-family: sans-serif; overflow: hidden; }
         
-        /* Barra de Carregamento */
+        /* Barra de Carregamento Estilo Gemini */
         #loader-screen { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.5s; }
         .progress-bar { width: 70%; height: 6px; background: #333; border-radius: 10px; overflow: hidden; margin-top: 15px; }
         #progress { width: 0%; height: 100%; background: linear-gradient(90deg, #4285f4, var(--accent)); transition: 0.3s; }
@@ -22,7 +22,7 @@
         .user { align-self: flex-end; background: #005fb8; border-bottom-right-radius: 2px; }
         .ai { align-self: flex-start; background: var(--card); border: 1px solid #3d3d3d; border-bottom-left-radius: 2px; }
 
-        /* Input Inteligente */
+        /* Input corrigido para Celular e PC */
         #input-area { position: fixed; bottom: 0; width: 100%; background: var(--bg); padding: 15px; border-top: 1px solid #333; }
         .box { max-width: 800px; margin: 0 auto; display: flex; background: #333; border-radius: 30px; padding: 5px 15px; align-items: center; }
         input { flex: 1; background: transparent; border: none; color: white; padding: 12px; outline: none; font-size: 16px; }
@@ -32,46 +32,46 @@
 <body>
 
     <div id="loader-screen">
-        <h3 id="load-text">Sincronizando ClassBot...</h3>
+        <h3 id="load-text">Iniciando ClassBot...</h3>
         <div class="progress-bar"><div id="progress"></div></div>
     </div>
 
     <div id="app">
         <header>ClassBot</header>
         <div id="messages">
-            <div class="msg ai">Opa! Sou o <b>ClassBot</b>. Minha base de conhecimento foi atualizada. Como posso te ajudar hoje?</div>
+            <div class="msg ai">Olá! Eu sou o <b>ClassBot</b>. Como posso ajudar você hoje?</div>
         </div>
 
         <div id="input-area">
             <div class="box">
-                <input type="text" id="userInput" placeholder="Perqunte qualquer coisa...">
+                <input type="text" id="userInput" placeholder="Digite sua mensagem...">
                 <button onclick="enviar()">↑</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Simulação de carregamento de banco de dados inteligente
+        // Carregamento visual simulado (estável para todos os dispositivos)
         window.onload = () => {
             let p = 0;
             let interval = setInterval(() => {
-                p += Math.random() * 20;
+                p += Math.random() * 25;
                 document.getElementById('progress').style.width = p + '%';
                 if (p >= 100) {
                     clearInterval(interval);
                     document.getElementById('loader-screen').style.opacity = '0';
                     setTimeout(() => document.getElementById('loader-screen').style.display = 'none', 500);
                 }
-            }, 200);
+            }, 150);
         };
 
-        // Cérebro de Conhecimento Geral (Expansível)
+        // Cérebro de Conhecimento Geral Independente
         const brain = {
-            "roblox": "O Roblox Studio usa Luau. Para seu jogo de mineração, você vai precisar de um sistema de 'DataStore' para salvar os minérios dos jogadores.",
-            "fluentgo": "O FluentGo deve focar na experiência do usuário. Como a logo é azul e branca, o app deve seguir um estilo 'Clean Tech'.",
-            "ia": "Inteligência Artificial é a simulação de processos humanos por máquinas. Eu, por exemplo, processo seus comandos localmente!",
-            "quem é você": "Eu sou o ClassBot, sua IA pessoal focada em desenvolvimento e produtividade.",
-            "ajuda": "Eu posso te ajudar a codar, dar ideias para o seu jogo de mineração ou conversar sobre design!"
+            "oi": "Olá! Tudo bem? Como posso ser útil?",
+            "quem é você": "Eu sou o ClassBot, uma inteligência artificial focada em processamento de linguagem e assistência geral.",
+            "ajuda": "Posso responder perguntas, explicar conceitos ou apenas conversar!",
+            "javascript": "JavaScript é uma linguagem poderosa que permite criar interatividade na web.",
+            "ia": "Inteligência Artificial é a tecnologia que permite a máquinas aprenderem e tomarem decisões."
         };
 
         async function enviar() {
@@ -82,13 +82,12 @@
             addMsg(text, 'user');
             input.value = "";
             
-            const aiMsg = addMsg("Analisando...", 'ai');
+            const aiMsg = addMsg("Processando...", 'ai');
 
-            // Simula processamento "inteligente"
             setTimeout(() => {
                 aiMsg.innerText = gerarResposta(text);
                 scrollDown();
-            }, 700);
+            }, 600);
         }
 
         function gerarResposta(t) {
@@ -96,7 +95,7 @@
             for (let chave in brain) {
                 if (txt.includes(chave)) return brain[chave];
             }
-            return `Entendi sobre '${t}'. Como ClassBot, eu recomendaria integrar essa ideia ao seu projeto de mineração no Roblox ou no FluentGo. O que acha?`;
+            return `Entendi sua mensagem sobre "${t}". Como uma IA em constante aprendizado, estou pronto para explorar mais esse assunto com você.`;
         }
 
         function addMsg(t, s) {
@@ -113,11 +112,13 @@
             m.scrollTop = m.scrollHeight;
         }
 
-        // Ajuste teclado mobile (O fim dos bugs)
-        window.visualViewport.addEventListener('resize', () => {
-            document.body.style.height = window.visualViewport.height + 'px';
-            scrollDown();
-        });
+        // Ajuste de Teclado Mobile (Visual Viewport)
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => {
+                document.body.style.height = window.visualViewport.height + 'px';
+                scrollDown();
+            });
+        }
     </script>
 </body>
 </html>
