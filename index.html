@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ClassBot AI | Classtech</title>
+    <title>Sala do futuro</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root { 
@@ -37,6 +37,7 @@
             max-width: 85%; padding: 14px 18px; border-radius: 20px; font-size: 15px; 
             line-height: 1.6; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
             word-wrap: break-word;
+            white-space: pre-wrap; /* ESSENCIAL PARA OS ESPAÇOS */
         }
 
         .user { align-self: flex-end; background: var(--primary); color: var(--white); border-bottom-right-radius: 4px; }
@@ -71,12 +72,12 @@
     <header>ClassBot<span>by Classtech</span></header>
     
     <div id="messages">
-        <div class="msg ai" id="welcome">E aí, manda. Estou aqui para te ajudar (ou não).</div>
+        <div class="msg ai">E aí, manda a real. O que você quer agora?</div>
     </div>
 
     <div id="input-area">
         <div class="box">
-            <input type="text" id="userInput" placeholder="Manda a real..." autocomplete="off">
+            <input type="text" id="userInput" placeholder="Escreva algo inteligente..." autocomplete="off">
             <button id="sendBtn">
                 <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
             </button>
@@ -86,17 +87,16 @@
     <script>
         let historico = [];
 
-        // Função que simula o efeito de digitação
         function digitarTexto(elemento, texto) {
             let i = 0;
-            elemento.innerText = ""; // Limpa os "..."
+            elemento.textContent = ""; // Limpa os "..."
             
             function tipo() {
                 if (i < texto.length) {
-                    elemento.innerText += texto.charAt(i);
+                    elemento.textContent += texto.charAt(i); // textContent preserva espaços perfeitamente
                     i++;
                     scrollDown();
-                    setTimeout(tipo, 15); // Velocidade da digitação (15ms)
+                    setTimeout(tipo, 12); // Velocidade de digitação
                 }
             }
             tipo();
@@ -125,20 +125,20 @@
                 const data = await response.json();
                 
                 if (data.answer) {
-                    digitarTexto(aiMsg, data.answer); // Aplica o efeito
+                    digitarTexto(aiMsg, data.answer);
                     historico.push({ role: "assistant", content: data.answer });
                 } else {
-                    aiMsg.innerText = "Erro no servidor.";
+                    aiMsg.textContent = "Erro no servidor. Tenta de novo.";
                 }
             } catch (e) {
-                aiMsg.innerText = "Sem conexão.";
+                aiMsg.textContent = "Sem conexão. Verifica sua internet.";
             }
         }
 
         function addMsg(t, s) {
             const d = document.createElement("div");
             d.className = `msg ${s}`;
-            d.innerText = t;
+            d.textContent = t;
             document.getElementById("messages").appendChild(d);
             return d;
         }
