@@ -6,31 +6,204 @@
     <title>ClassBot AI | Classtech</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #007bff; --bg: #222; --card: #2d2d2d; --white: #ffffff; }
+        :root { 
+            --primary: #007bff; 
+            --bg: #222; 
+            --card: #2d2d2d; 
+            --white: #ffffff;
+            --shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
         * { box-sizing: border-box; font-family: 'Montserrat', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body, html { margin: 0; padding: 0; height: 100vh; background: var(--bg); color: var(--white); display: flex; flex-direction: column; overflow: hidden; }
-        header { padding: 18px; text-align: center; background: #1a1a1a; color: var(--primary); font-weight: 700; border-bottom: 1px solid #333; }
+
+        body, html { 
+            margin: 0; padding: 0; height: 100vh; 
+            background: var(--bg); color: var(--white); 
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+
+        /* Overlay de Login */
+        #login-overlay { 
+            position: fixed; inset: 0; background: var(--bg); z-index: 100; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; 
+        }
+
+        #auth-container { width: 85%; max-width: 320px; }
+
+        .auth-input { 
+            width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 10px; 
+            border: 1px solid #444; background: #1a1a1a; color: white; outline: none;
+        }
+
+        .login-btn { 
+            width: 100%; background: var(--primary); color: white; padding: 12px; 
+            border-radius: 10px; border: none; font-weight: 600; cursor: pointer; 
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+
+        .google-btn { background: var(--white); color: #000; margin-top: 15px; }
+
+        /* App Header */
+        header { 
+            padding: 15px 20px; text-align: center; background: #1a1a1a; 
+            display: flex; justify-content: space-between; align-items: center; 
+            border-bottom: 1px solid #333; box-shadow: var(--shadow);
+        }
+
+        header .title { color: var(--primary); font-weight: 700; font-size: 1.1rem; }
+        
+        #user-info { display: flex; align-items: center; gap: 12px; }
+        #user-info img { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--primary); }
+
+        /* Área de Chat */
         #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-        .msg { max-width: 85%; padding: 14px 18px; border-radius: 20px; font-size: 15px; line-height: 1.6; word-wrap: break-word; white-space: pre-wrap; }
+
+        .msg { 
+            max-width: 85%; padding: 14px 18px; border-radius: 20px; font-size: 14px; 
+            line-height: 1.5; word-wrap: break-word; white-space: pre-wrap; 
+        }
+
         .user { align-self: flex-end; background: var(--primary); border-bottom-right-radius: 4px; }
         .ai { align-self: flex-start; background: var(--card); border: 1px solid #3d3d3d; border-bottom-left-radius: 4px; }
+
+        /* Input Área */
         #input-area { padding: 20px; background: linear-gradient(transparent, var(--bg)); }
-        .box { max-width: 700px; margin: 0 auto; display: flex; background: var(--card); border-radius: 50px; padding: 8px 10px 8px 22px; border: 1px solid #444; }
-        input { flex: 1; background: transparent; border: none; color: var(--white); outline: none; font-size: 16px; }
-        #sendBtn { background: var(--primary); border: none; color: white; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .box { 
+            max-width: 700px; margin: 0 auto; display: flex; 
+            background: var(--card); border-radius: 50px; 
+            padding: 6px 6px 6px 22px; border: 1px solid #444; align-items: center;
+        }
+
+        input[type="text"] { flex: 1; background: transparent; border: none; color: var(--white); outline: none; font-size: 16px; }
+
+        #sendBtn { 
+            background: var(--primary); border: none; color: white; 
+            width: 42px; height: 42px; border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        #messages::-webkit-scrollbar { width: 4px; }
+        #messages::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
     </style>
 </head>
 <body>
-    <header>ClassBot</header>
-    <div id="messages"><div class="msg ai">Voltei ao básico. Sem fotos, só meu intelecto superior. O que você quer?</div></div>
+
+    <div id="login-overlay">
+        <h2 style="color: var(--primary); margin-bottom: 5px;">ClassBot</h2>
+        <p style="font-size: 0.8rem; color: #888; margin-bottom: 25px;">by Classtech</p>
+        
+        <div id="auth-container">
+            <input type="email" id="email" class="auth-input" placeholder="Seu e-mail">
+            <input type="password" id="password" class="auth-input" placeholder="Sua senha">
+            
+            <button class="login-btn" onclick="loginEmail()">Entrar</button>
+            <button onclick="cadastrarEmail()" style="background:none; border:none; color:#888; margin-top:12px; cursor:pointer; font-size:0.75rem;">Não tem conta? Cadastre-se agora</button>
+            
+            <div style="margin: 20px 0; color: #444; font-size: 0.8rem;">OU</div>
+            
+            <button class="login-btn google-btn" onclick="loginGoogle()">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/pwa/google.svg" width="18"> Entrar com Google
+            </button>
+        </div>
+    </div>
+
+    <header>
+        <div class="title">ClassBot</div>
+        <div id="user-info">
+            <button onclick="logout()" style="background:none; border:none; color:#888; cursor:pointer; font-size:0.7rem; margin-right: 10px;">Sair</button>
+            <div id="user-pfp"></div>
+        </div>
+    </header>
+
+    <div id="messages"></div>
+
     <div id="input-area">
         <div class="box">
             <input type="text" id="userInput" placeholder="Manda a real..." autocomplete="off">
-            <button id="sendBtn"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg></button>
+            <button id="sendBtn">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+            </button>
         </div>
     </div>
-    <script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB0vSCE32XEg0IL6LaRzmlvfa3qj1priPg",
+            authDomain: "classbot-807d8.firebaseapp.com",
+            projectId: "classbot-807d8",
+            storageBucket: "classbot-807d8.firebasestorage.app",
+            messagingSenderId: "117494419469",
+            appId: "1:117494419469:web:ca12637334e9a7d8090544"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        let currentUser = null;
         let historico = [];
+
+        // --- AUTH ---
+        window.loginGoogle = async () => {
+            try { await signInWithPopup(auth, provider); } catch (e) { alert(e.message); }
+        };
+
+        window.loginEmail = async () => {
+            const e = document.getElementById('email').value;
+            const s = document.getElementById('password').value;
+            try { await signInWithEmailAndPassword(auth, e, s); } catch (err) { alert("E-mail ou senha inválidos."); }
+        };
+
+        window.cadastrarEmail = async () => {
+            const e = document.getElementById('email').value;
+            const s = document.getElementById('password').value;
+            if (s.length < 6) return alert("Senha muito curta (mínimo 6 caracteres).");
+            try { 
+                await createUserWithEmailAndPassword(auth, e, s);
+                alert("Conta criada com sucesso!");
+            } catch (err) { alert(err.message); }
+        };
+
+        window.logout = () => signOut(auth).then(() => location.reload());
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('login-overlay').style.display = 'none';
+                if(user.photoURL) document.getElementById('user-pfp').innerHTML = `<img src="${user.photoURL}">`;
+                await carregarHistorico();
+            }
+        });
+
+        // --- FIRESTORE ---
+        async function carregarHistorico() {
+            const docRef = doc(db, "chats", currentUser.uid);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                historico = docSnap.data().mensagens || [];
+                document.getElementById('messages').innerHTML = "";
+                historico.forEach(m => addMsg(m.content, m.role === 'user' ? 'user' : 'ai'));
+            } else {
+                addMsg("Histórico carregado. O que vamos programar hoje?", "ai");
+            }
+        }
+
+        async function salvarMensagem(role, content) {
+            const docRef = doc(db, "chats", currentUser.uid);
+            const docSnap = await getDoc(docRef);
+            if (!docSnap.exists()) {
+                await setDoc(docRef, { mensagens: [{ role, content }] });
+            } else {
+                await updateDoc(docRef, { mensagens: arrayUnion({ role, content }) });
+            }
+        }
+
+        // --- CHAT LOGIC ---
         function digitarTexto(elemento, texto) {
             let i = 0; elemento.textContent = "";
             function tipo() {
@@ -38,37 +211,52 @@
                     elemento.textContent += texto.charAt(i);
                     i++;
                     document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
-                    setTimeout(tipo, 12);
+                    setTimeout(tipo, 10);
                 }
             }
             tipo();
         }
+
         async function enviar() {
             const input = document.getElementById('userInput');
             const text = input.value.trim();
-            if (!text) return;
+            if (!text || !currentUser) return;
+
             addMsg(text, 'user');
             input.value = '';
+            
+            await salvarMensagem("user", text);
             historico.push({ role: "user", content: text });
+
             const aiMsg = addMsg("...", 'ai');
+            const mContainer = document.getElementById("messages");
+            mContainer.scrollTop = mContainer.scrollHeight;
+
             try {
                 const response = await fetch("/api/chat", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ mensagens: historico })
+                    body: JSON.stringify({ mensagens: historico.slice(-8) })
                 });
                 const data = await response.json();
-                digitarTexto(aiMsg, data.answer);
-                historico.push({ role: "assistant", content: data.answer });
+                
+                if (data.answer) {
+                    digitarTexto(aiMsg, data.answer);
+                    historico.push({ role: "assistant", content: data.answer });
+                    await salvarMensagem("assistant", data.answer);
+                }
             } catch (e) { aiMsg.textContent = "Erro na conexão."; }
         }
+
         function addMsg(t, s) {
             const d = document.createElement("div");
             d.className = `msg ${s}`;
             d.textContent = t;
             document.getElementById("messages").appendChild(d);
+            document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
             return d;
         }
+
         document.getElementById('sendBtn').onclick = enviar;
         document.getElementById('userInput').onkeypress = (e) => { if(e.key === 'Enter') enviar(); };
     </script>
