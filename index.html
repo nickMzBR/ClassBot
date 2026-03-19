@@ -305,6 +305,100 @@
         #sendBtn:disabled, #attachBtn:disabled { opacity: .3; cursor: not-allowed; transform: none; }
         .hint { text-align: center; font-size: 10.5px; color: var(--muted); margin-top: 8px; opacity: .45; }
 
+
+        /* ── CODE PREVIEW PANEL ── */
+        #preview-panel {
+            position: fixed; top: 0; right: 0; height: 100dvh;
+            width: 48%; min-width: 320px; max-width: 860px;
+            background: var(--surface); border-left: 1px solid var(--border);
+            display: flex; flex-direction: column; z-index: 500;
+            transform: translateX(100%); transition: transform .3s cubic-bezier(.4,0,.2,1);
+        }
+        #preview-panel.open { transform: translateX(0); }
+        #preview-panel.open ~ #main { margin-right: 0; }
+
+        .preview-header {
+            display: flex; align-items: center; gap: 0;
+            border-bottom: 1px solid var(--border); flex-shrink: 0;
+            background: var(--sidebar);
+        }
+        .preview-tabs { display: flex; flex: 1; }
+        .preview-tab {
+            padding: 11px 18px; font-size: 13px; font-weight: 500;
+            color: var(--muted); cursor: pointer; border: none;
+            background: transparent; font-family: 'Inter', sans-serif;
+            border-bottom: 2px solid transparent; transition: color .15s;
+            white-space: nowrap;
+        }
+        .preview-tab.active { color: var(--text); border-bottom-color: var(--blue); }
+        .preview-tab:hover:not(.active) { color: #aaa; }
+        .preview-close {
+            width: 36px; height: 36px; border-radius: 7px; margin: 4px;
+            background: none; border: none; color: var(--muted); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: background .15s, color .15s; flex-shrink: 0;
+        }
+        .preview-close:hover { background: var(--surface2); color: var(--text); }
+        .preview-body { flex: 1; overflow: hidden; position: relative; }
+        #preview-code-wrap {
+            height: 100%; overflow-y: auto; display: none;
+        }
+        #preview-code-wrap.active { display: block; }
+        #preview-code-content {
+            padding: 16px; font-family: 'IBM Plex Mono', monospace;
+            font-size: 12.5px; line-height: 1.65; color: #d4d4d4;
+            white-space: pre; overflow-x: auto;
+        }
+        #preview-iframe-wrap {
+            height: 100%; display: none;
+        }
+        #preview-iframe-wrap.active { display: block; }
+        #preview-iframe {
+            width: 100%; height: 100%; border: none;
+            background: white;
+        }
+        .preview-toolbar {
+            display: flex; align-items: center; gap: 6px;
+            padding: 6px 10px; border-top: 1px solid var(--border);
+            background: var(--sidebar); flex-shrink: 0;
+        }
+        .preview-tool-btn {
+            padding: 4px 10px; border-radius: 6px; font-size: 11.5px;
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--muted); cursor: pointer; font-family: 'Inter', sans-serif;
+            transition: color .15s, border-color .15s;
+        }
+        .preview-tool-btn:hover { color: var(--text); border-color: #555; }
+        .preview-lang-badge {
+            font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+            color: var(--muted); margin-left: auto;
+        }
+
+        /* Resize handle */
+        #resize-handle {
+            position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+            cursor: col-resize; background: transparent;
+            transition: background .15s;
+        }
+        #resize-handle:hover { background: var(--blue); }
+
+        /* When panel open, shrink main */
+        body.panel-open #main {
+            transition: margin-right .3s cubic-bezier(.4,0,.2,1);
+        }
+
+        /* Preview button in code blocks */
+        .code-preview-btn {
+            font-size: 11px; padding: 3px 8px; border-radius: 5px;
+            background: var(--blue-dim); border: 1px solid rgba(59,130,246,0.3);
+            color: var(--blue); cursor: pointer; font-family: 'Inter', sans-serif;
+            transition: background .15s; margin-left: 4px;
+        }
+        .code-preview-btn:hover { background: rgba(59,130,246,0.25); }
+
+        @media (max-width: 768px) {
+            #preview-panel { width: 100%; min-width: unset; border-left: none; }
+        }
         /* ── MODAL ── */
         #img-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.9); z-index: 3000; align-items: center; justify-content: center; cursor: zoom-out; animation: fadeIn .15s ease; }
         #img-modal.show { display: flex; }
@@ -388,6 +482,34 @@
     </div>
 </main>
 
+<!-- CODE PREVIEW PANEL -->
+<div id="preview-panel">
+    <div id="resize-handle"></div>
+    <div class="preview-header">
+        <div class="preview-tabs">
+            <button class="preview-tab active" id="tab-code" onclick="switchPreviewTab('code')">Código</button>
+            <button class="preview-tab" id="tab-preview" onclick="switchPreviewTab('preview')">Preview</button>
+        </div>
+        <button class="preview-close" onclick="closePreview()" title="Fechar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+    </div>
+    <div class="preview-body">
+        <div id="preview-code-wrap" class="active">
+            <pre id="preview-code-content"></pre>
+        </div>
+        <div id="preview-iframe-wrap">
+            <iframe id="preview-iframe" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
+        </div>
+    </div>
+    <div class="preview-toolbar">
+        <button class="preview-tool-btn" onclick="copyPreviewCode()">Copiar código</button>
+        <button class="preview-tool-btn" id="refresh-btn" onclick="refreshPreview()" style="display:none">↺ Refresh</button>
+        <span class="preview-lang-badge" id="preview-lang-badge"></span>
+    </div>
+</div>
+
+
 <div id="img-modal" onclick="this.classList.remove('show')">
     <img id="modal-img" src="" alt="">
 </div>
@@ -419,6 +541,7 @@
                     <div class="code-header">
                         <span class="code-lang">${language}</span>
                         <button class="code-copy" onclick="copyCode('${id}')">Copiar</button>
+                        ${['html','svg','javascript','js','css'].includes(language.toLowerCase()) ? `<button class="code-preview-btn" onclick="openPreview(document.getElementById('${id}').textContent, '${language}')">Preview</button>` : ''}
                     </div>
                     <pre id="${id}"><code>${escapeHtml(typeof code === 'object' ? code.text || '' : code)}</code></pre>
                 </div>`;
@@ -779,6 +902,110 @@
         d.appendChild(header); d.appendChild(fileEl);
         c.appendChild(d); scrollBottom();
     }
+
+
+    // ── CODE PREVIEW ──
+    let currentPreviewCode = '';
+    let currentPreviewLang = '';
+    const PREVIEWABLE = ['html', 'svg', 'javascript', 'js', 'css'];
+
+    window.openPreview = (code, lang) => {
+        currentPreviewCode = code;
+        currentPreviewLang = lang;
+        document.getElementById('preview-code-content').textContent = code;
+        document.getElementById('preview-lang-badge').textContent = lang;
+
+        const canPreview = PREVIEWABLE.includes(lang.toLowerCase());
+        document.getElementById('tab-preview').style.display = canPreview ? '' : 'none';
+        document.getElementById('refresh-btn').style.display = canPreview ? '' : 'none';
+
+        document.getElementById('preview-panel').classList.add('open');
+        document.body.classList.add('panel-open');
+
+        // Auto-switch to preview for HTML
+        if (['html', 'svg'].includes(lang.toLowerCase())) {
+            switchPreviewTab('preview');
+        } else {
+            switchPreviewTab('code');
+        }
+
+        // Adjust main width
+        const panel = document.getElementById('preview-panel');
+        const panelW = panel.offsetWidth;
+        if (window.innerWidth > 768) {
+            document.getElementById('main').style.marginRight = panelW + 'px';
+        }
+    };
+
+    window.closePreview = () => {
+        document.getElementById('preview-panel').classList.remove('open');
+        document.body.classList.remove('panel-open');
+        document.getElementById('main').style.marginRight = '';
+        // Clear iframe
+        document.getElementById('preview-iframe').srcdoc = '';
+    };
+
+    window.switchPreviewTab = (tab) => {
+        document.getElementById('tab-code').classList.toggle('active', tab === 'code');
+        document.getElementById('tab-preview').classList.toggle('active', tab === 'preview');
+        document.getElementById('preview-code-wrap').classList.toggle('active', tab === 'code');
+        document.getElementById('preview-iframe-wrap').classList.toggle('active', tab === 'preview');
+
+        if (tab === 'preview') renderPreviewIframe();
+    };
+
+    function renderPreviewIframe() {
+        const iframe = document.getElementById('preview-iframe');
+        const lang = currentPreviewLang.toLowerCase();
+        let html = '';
+        if (lang === 'html' || lang === 'svg') {
+            html = currentPreviewCode;
+        } else if (lang === 'css') {
+            html = `<!DOCTYPE html><html><head><style>${currentPreviewCode}</style></head><body><p>CSS Preview — adiciona HTML para ver o resultado.</p></body></html>`;
+        } else if (lang === 'javascript' || lang === 'js') {
+            html = `<!DOCTYPE html><html><head><style>body{font-family:sans-serif;padding:16px;background:#fff;color:#111}</style></head><body><pre id="out"></pre><script>
+const _log = console.log;
+console.log = (...a) => { document.getElementById('out').textContent += a.join(' ') + '\n'; _log(...a); };
+try { ${currentPreviewCode} } catch(e) { document.getElementById('out').textContent = 'Erro: ' + e.message; }
+<\/script></body></html>`;
+        }
+        iframe.srcdoc = html;
+    }
+
+    window.refreshPreview = () => {
+        if (document.getElementById('tab-preview').classList.contains('active')) {
+            renderPreviewIframe();
+        }
+    };
+
+    window.copyPreviewCode = () => {
+        navigator.clipboard.writeText(currentPreviewCode).then(() => {
+            const btn = document.querySelector('.preview-tool-btn');
+            btn.textContent = '✓ Copiado!';
+            setTimeout(() => btn.textContent = 'Copiar código', 2000);
+        });
+    };
+
+    // Resize handle
+    (() => {
+        const handle = document.getElementById('resize-handle');
+        const panel = document.getElementById('preview-panel');
+        let dragging = false, startX, startW;
+        handle.addEventListener('mousedown', e => {
+            dragging = true; startX = e.clientX; startW = panel.offsetWidth;
+            document.body.style.userSelect = 'none';
+        });
+        document.addEventListener('mousemove', e => {
+            if (!dragging) return;
+            const delta = startX - e.clientX;
+            const newW = Math.min(Math.max(startW + delta, 280), window.innerWidth * 0.8);
+            panel.style.width = newW + 'px';
+            if (window.innerWidth > 768) document.getElementById('main').style.marginRight = newW + 'px';
+        });
+        document.addEventListener('mouseup', () => {
+            dragging = false; document.body.style.userSelect = '';
+        });
+    })();
 
     function scrollBottom() {
         const w = document.getElementById('messages-wrap');
