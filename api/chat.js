@@ -18,7 +18,7 @@ export default async function handler(req, res) {
                 messages: [
                     {
                         role: "system",
-                        content: `You are ClassBot, an AI assistant created by Red.
+                        content: `You are Prisma, an AI assistant created by Red.
 
 ## Behavior
 - Answer in the same language the user writes in (default: Portuguese)
