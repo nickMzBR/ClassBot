@@ -405,6 +405,74 @@
         }
         @keyframes blink-cursor { 0%,100%{opacity:1} 50%{opacity:0} }
 
+
+        /* ── SETTINGS MODAL ── */
+        #settings-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,.7); z-index: 4000;
+            align-items: center; justify-content: center;
+            animation: fadeIn .15s ease;
+        }
+        #settings-overlay.show { display: flex; }
+        .settings-card {
+            width: 92%; max-width: 400px;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 16px; overflow: hidden;
+            animation: slideUp .2s ease;
+        }
+        .settings-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 20px; border-bottom: 1px solid var(--border);
+        }
+        .settings-header h2 { font-size: 15px; font-weight: 600; }
+        .settings-close {
+            width: 28px; height: 28px; border-radius: 7px; border: none;
+            background: var(--surface2); color: var(--muted); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: color .15s;
+        }
+        .settings-close:hover { color: var(--text); }
+        .settings-body { padding: 8px 0; max-height: 70vh; overflow-y: auto; }
+        .settings-section {
+            padding: 10px 20px 4px;
+            font-size: 10px; font-weight: 600; color: var(--muted);
+            letter-spacing: .08em; text-transform: uppercase;
+        }
+        .settings-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 20px; gap: 16px; transition: background .15s;
+        }
+        .settings-row:hover { background: var(--surface2); }
+        .settings-label { font-size: 13.5px; font-weight: 500; }
+        .settings-desc { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+        /* Toggle switch */
+        .toggle {
+            position: relative; width: 40px; height: 22px; flex-shrink: 0;
+        }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute; inset: 0; border-radius: 999px;
+            background: var(--border); cursor: pointer;
+            transition: background .2s;
+        }
+        .toggle-slider::before {
+            content: ''; position: absolute;
+            width: 16px; height: 16px; border-radius: 50%;
+            background: #fff; left: 3px; top: 3px;
+            transition: transform .2s;
+        }
+        .toggle input:checked + .toggle-slider { background: var(--blue); }
+        .toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
+        /* Select */
+        .settings-select {
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--text); border-radius: 7px; padding: 6px 10px;
+            font-family: 'Inter', sans-serif; font-size: 13px; outline: none;
+            cursor: pointer; transition: border-color .2s;
+        }
+        .settings-select:focus { border-color: var(--blue); }
+        .settings-divider { height: 1px; background: var(--border); margin: 6px 0; }
+
         /* ── MODAL ── */
         #img-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.9); z-index: 3000; align-items: center; justify-content: center; cursor: zoom-out; animation: fadeIn .15s ease; }
         #img-modal.show { display: flex; }
@@ -457,6 +525,11 @@
         <button class="menu-toggle" onclick="toggleMenu()">☰</button>
         <span class="header-title">Prisma</span>
         <span class="header-sub">llama-3.3-70b</span>
+        <button class="icon-btn" onclick="openSettings()" title="Configurações" style="margin-left:8px;flex-shrink:0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+            </svg>
+        </button>
     </header>
     <div id="messages-wrap">
         <div id="messages">
@@ -512,6 +585,93 @@
         <button class="preview-tool-btn" onclick="copyPreviewCode()">Copiar código</button>
         <button class="preview-tool-btn" id="refresh-btn" onclick="refreshPreview()" style="display:none">↺ Refresh</button>
         <span class="preview-lang-badge" id="preview-lang-badge"></span>
+    </div>
+</div>
+
+
+<!-- SETTINGS -->
+<div id="settings-overlay" onclick="if(event.target===this)closeSettings()">
+    <div class="settings-card">
+        <div class="settings-header">
+            <h2>Configurações</h2>
+            <button class="settings-close" onclick="closeSettings()">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="settings-body">
+
+            <div class="settings-section">Aparência</div>
+            <div class="settings-row">
+                <div><div class="settings-label">Tema</div><div class="settings-desc">Cor de fundo da interface</div></div>
+                <select class="settings-select" id="cfg-theme" onchange="applySetting('theme',this.value)">
+                    <option value="dark">Escuro</option>
+                    <option value="darker">Mais escuro</option>
+                    <option value="midnight">Meia-noite</option>
+                </select>
+            </div>
+            <div class="settings-row">
+                <div><div class="settings-label">Tamanho do texto</div><div class="settings-desc">Tamanho das mensagens</div></div>
+                <select class="settings-select" id="cfg-fontsize" onchange="applySetting('fontsize',this.value)">
+                    <option value="13">Pequeno</option>
+                    <option value="14" selected>Médio</option>
+                    <option value="15">Grande</option>
+                    <option value="16">Extra grande</option>
+                </select>
+            </div>
+
+            <div class="settings-divider"></div>
+            <div class="settings-section">Comportamento</div>
+
+            <div class="settings-row">
+                <div><div class="settings-label">Efeito de digitação</div><div class="settings-desc">Animar as respostas letra a letra</div></div>
+                <label class="toggle"><input type="checkbox" id="cfg-typing" checked onchange="applySetting('typing',this.checked)"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="settings-row">
+                <div><div class="settings-label">Renderizar Markdown</div><div class="settings-desc">Formatar código, listas e negrito</div></div>
+                <label class="toggle"><input type="checkbox" id="cfg-markdown" checked onchange="applySetting('markdown',this.checked)"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="settings-row">
+                <div><div class="settings-label">Enter para enviar</div><div class="settings-desc">Desativado usa Ctrl+Enter</div></div>
+                <label class="toggle"><input type="checkbox" id="cfg-enter" checked onchange="applySetting('enter',this.checked)"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="settings-row">
+                <div><div class="settings-label">Sons</div><div class="settings-desc">Som ao receber resposta</div></div>
+                <label class="toggle"><input type="checkbox" id="cfg-sound" onchange="applySetting('sound',this.checked)"><span class="toggle-slider"></span></label>
+            </div>
+
+            <div class="settings-divider"></div>
+            <div class="settings-section">Modelo</div>
+            <div class="settings-row">
+                <div><div class="settings-label">Velocidade de digitação</div><div class="settings-desc">Caracteres por tick</div></div>
+                <select class="settings-select" id="cfg-speed" onchange="applySetting('speed',this.value)">
+                    <option value="1">Lenta</option>
+                    <option value="2" selected>Normal</option>
+                    <option value="4">Rápida</option>
+                    <option value="8">Muito rápida</option>
+                </select>
+            </div>
+
+            <div class="settings-divider"></div>
+            <div class="settings-section">Personalidade</div>
+            <div style="padding: 4px 20px 10px;">
+                <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;" id="personality-presets"></div>
+                <textarea id="cfg-personality"
+                    placeholder="Descreve como o Prisma deve se comportar, seu tom, área de foco, restrições..."
+                    style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:9px;
+                    color:var(--text);font-family:'Inter',sans-serif;font-size:13px;line-height:1.6;
+                    padding:10px 12px;resize:vertical;min-height:100px;outline:none;transition:border-color .2s;"
+                    onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'"
+                    oninput="cfg.personality=this.value"
+                ></textarea>
+                <button onclick="savePersonality()" style="margin-top:8px;width:100%;padding:9px;border-radius:8px;
+                    background:var(--blue);border:none;color:#fff;font-family:'Inter',sans-serif;
+                    font-weight:600;font-size:13px;cursor:pointer;transition:background .15s;"
+                    onmouseover="this.style.background='var(--blue-hover)'" onmouseout="this.style.background='var(--blue)'">
+                    Guardar personalidade
+                </button>
+            </div>
+
+        </div>
     </div>
 </div>
 
@@ -582,6 +742,7 @@
         document.getElementById('login-overlay').style.display = 'none';
         document.getElementById('user-name').textContent = usuario;
         escutarConversas();
+        loadCfg();
     }
 
     window.toggleMenu = () => {
@@ -739,11 +900,25 @@
     }
 
     function digitarTexto(el, txt) {
+        const useMarkdown = cfg.markdown;
+        const useTyping = cfg.typing;
+        const speed = parseInt(cfg.speed) || 2;
+
+        if (!useTyping) {
+            // Instant render
+            el.innerHTML = useMarkdown ? marked.parse(txt) : txt.replace(/\n/g,'<br>');
+            scrollBottom();
+            return;
+        }
+
         // Parse markdown first, then reveal word by word
-        el.innerHTML = marked.parse(txt);
+        if (useMarkdown) {
+            el.innerHTML = marked.parse(txt);
+        } else {
+            el.textContent = txt;
+        }
         el.style.opacity = '0';
 
-        // Collect all text nodes inside the rendered HTML
         const allNodes = [];
         const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
         let node;
@@ -753,7 +928,6 @@
 
         if (allNodes.length === 0) { el.style.opacity = '1'; return; }
 
-        // Hide all text content, reveal word by word
         const originals = allNodes.map(n => n.textContent);
         allNodes.forEach(n => n.textContent = '');
         el.style.opacity = '1';
@@ -762,20 +936,30 @@
         let charIdx = 0;
 
         const tick = () => {
-            if (nodeIdx >= allNodes.length) { scrollBottom(); return; }
+            if (nodeIdx >= allNodes.length) { scrollBottom(); playSound(); return; }
             const node = allNodes[nodeIdx];
             const full = originals[nodeIdx];
-            const charsPerTick = 2;
-            charIdx += charsPerTick;
+            charIdx += speed;
             node.textContent = full.slice(0, charIdx);
-            if (charIdx >= full.length) {
-                nodeIdx++;
-                charIdx = 0;
-            }
+            if (charIdx >= full.length) { nodeIdx++; charIdx = 0; }
             scrollBottom();
             setTimeout(tick, 18);
         };
         tick();
+    }
+
+    function playSound() {
+        if (!cfg.sound) return;
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.connect(g); g.connect(ctx.destination);
+            o.frequency.value = 880; o.type = 'sine';
+            g.gain.setValueAtTime(0.08, ctx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+            o.start(); o.stop(ctx.currentTime + 0.15);
+        } catch(e) {}
     }
 
         // ── SEND ──
@@ -844,7 +1028,7 @@
             const res = await fetch("/api/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ mensagens: mensagensAPI })
+                body: JSON.stringify({ mensagens: mensagensAPI, personality: cfg.personality || '' })
             });
             const data = await res.json();
             document.getElementById('typing')?.remove();
@@ -1053,6 +1237,115 @@ try { ${currentPreviewCode} } catch(e) { document.getElementById('out').textCont
             dragging = false; document.body.style.userSelect = '';
         });
     })();
+
+
+    // ── SETTINGS ──
+    const DEFAULT_CFG = {
+        typing: true, markdown: true, enter: true, sound: false,
+        fontsize: '14', theme: 'dark', speed: '2', personality: ''
+    };
+    let cfg = { ...DEFAULT_CFG };
+
+    const PERSONALITY_PRESETS = [
+        { label: 'Programador', value: 'Você é um especialista em programação. Responde de forma técnica, direta e fornece sempre código funcional e bem explicado.' },
+        { label: 'Professor', value: 'Você é um professor paciente e didático. Explica conceitos complexos de forma simples, usa exemplos práticos e encoraja o aprendizado.' },
+        { label: 'Assistente Geral', value: 'Você é um assistente de IA útil, amigável e conciso. Responde de forma clara e objetiva a qualquer tipo de pergunta.' },
+        { label: 'Criativo', value: 'Você é um assistente criativo e imaginativo. Ajuda com escrita, ideias, storytelling e tarefas criativas com entusiasmo e originalidade.' },
+        { label: 'Analista', value: 'Você é um analista rigoroso. Analisa dados, argumentos e situações com lógica, apresenta prós e contras e baseia-se em evidências.' },
+    ];
+
+    async function loadCfg() {
+        if (!usuario) return;
+        try {
+            const snap = await get(ref(db, `config/${usuario}`));
+            if (snap.exists()) cfg = { ...DEFAULT_CFG, ...snap.val() };
+        } catch(e) {}
+        applyAllSettings();
+    }
+
+    async function saveCfg() {
+        if (!usuario) return;
+        try { await set(ref(db, `config/${usuario}`), cfg); } catch(e) {}
+    }
+
+    function applyAllSettings() {
+        const themes = {
+            dark: ['#1a1a1a','#111','#222','#2a2a2a','#333'],
+            darker: ['#141414','#0a0a0a','#1a1a1a','#222','#2a2a2a'],
+            midnight: ['#0d1117','#010409','#161b22','#21262d','#30363d']
+        };
+        const t = themes[cfg.theme] || themes.dark;
+        document.documentElement.style.setProperty('--bg', t[0]);
+        document.documentElement.style.setProperty('--sidebar', t[1]);
+        document.documentElement.style.setProperty('--surface', t[2]);
+        document.documentElement.style.setProperty('--surface2', t[3]);
+        document.documentElement.style.setProperty('--border', t[4]);
+        document.getElementById('messages').style.fontSize = cfg.fontsize + 'px';
+        document.getElementById('cfg-typing').checked = cfg.typing;
+        document.getElementById('cfg-markdown').checked = cfg.markdown;
+        document.getElementById('cfg-enter').checked = cfg.enter;
+        document.getElementById('cfg-sound').checked = cfg.sound;
+        document.getElementById('cfg-fontsize').value = cfg.fontsize;
+        document.getElementById('cfg-theme').value = cfg.theme;
+        document.getElementById('cfg-speed').value = cfg.speed;
+        document.getElementById('cfg-personality').value = cfg.personality || '';
+        renderPersonalityPresets();
+    }
+
+    function renderPersonalityPresets() {
+        const box = document.getElementById('personality-presets');
+        if (!box) return;
+        box.innerHTML = '';
+        PERSONALITY_PRESETS.forEach(p => {
+            const btn = document.createElement('button');
+            const active = cfg.personality === p.value;
+            btn.textContent = p.label;
+            btn.style.cssText = `padding:5px 12px;border-radius:999px;font-size:11.5px;cursor:pointer;
+                font-family:'Inter',sans-serif;transition:all .15s;
+                background:${active ? 'var(--blue)' : 'var(--surface2)'};
+                border:1px solid ${active ? 'var(--blue)' : 'var(--border)'};
+                color:${active ? '#fff' : 'var(--muted)'};`;
+            btn.onclick = () => {
+                cfg.personality = active ? '' : p.value;
+                document.getElementById('cfg-personality').value = cfg.personality;
+                renderPersonalityPresets();
+            };
+            box.appendChild(btn);
+        });
+    }
+
+    window.savePersonality = async () => {
+        cfg.personality = document.getElementById('cfg-personality').value;
+        await saveCfg();
+        renderPersonalityPresets();
+        const btn = event.target;
+        btn.textContent = '✓ Guardado!';
+        setTimeout(() => btn.textContent = 'Guardar personalidade', 2000);
+    };
+
+    window.applySetting = async (key, val) => {
+        cfg[key] = val;
+        await saveCfg();
+        applyAllSettings();
+    };
+
+    window.openSettings = () => {
+        applyAllSettings();
+        document.getElementById('settings-overlay').classList.add('show');
+    };
+
+    window.closeSettings = () => {
+        document.getElementById('settings-overlay').classList.remove('show');
+    };
+
+    // Patch keyHandler to respect enter setting
+    window.keyHandler = (e) => {
+        const sendOnEnter = cfg.enter;
+        if (e.key === 'Enter') {
+            if (sendOnEnter && !e.shiftKey) { e.preventDefault(); enviar(); }
+            else if (!sendOnEnter && e.ctrlKey) { e.preventDefault(); enviar(); }
+        }
+    };
 
     function scrollBottom() {
         const w = document.getElementById('messages-wrap');
