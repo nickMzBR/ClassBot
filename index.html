@@ -307,9 +307,16 @@
             <div class="settings-row">
                 <div><div class="settings-label">Tema</div><div class="settings-desc">Cor de fundo da interface</div></div>
                 <select class="settings-select" id="cfg-theme" onchange="applySetting('theme',this.value)">
-                    <option value="dark">Escuro</option>
-                    <option value="darker">Mais escuro</option>
-                    <option value="midnight">Meia-noite</option>
+                    <option value="dark">🌑 Escuro</option>
+                    <option value="midnight">🌌 Meia-noite</option>
+                    <option value="darker">⬛ Preto</option>
+                    <option value="white">☀️ Branco</option>
+                    <option value="ocean">🌊 Oceano</option>
+                    <option value="forest">🌿 Floresta</option>
+                    <option value="rose">🌸 Rosa</option>
+                    <option value="amber">🔥 Âmbar</option>
+                    <option value="violet">💜 Violeta</option>
+                    <option value="slate">🪨 Ardósia</option>
                 </select>
             </div>
             <div class="settings-row">
@@ -465,10 +472,44 @@
     }
 
     function applyAllSettings() {
-        const themes = { dark: ["#1a1a1a","#111","#222","#2a2a2a","#333"], darker: ["#141414","#0a0a0a","#1a1a1a","#222","#2a2a2a"], midnight: ["#0d1117","#010409","#161b22","#21262d","#30363d"] };
+        const themes = {
+            dark:     { bg:"#1a1a1a", sidebar:"#111",    surface:"#222",    surface2:"#2a2a2a", border:"#333",    text:"#efefef", muted:"#666",    blue:"#3b82f6", bluehover:"#2563eb" },
+            midnight: { bg:"#0d1117", sidebar:"#010409", surface:"#161b22", surface2:"#21262d", border:"#30363d", text:"#e6edf3", muted:"#8b949e", blue:"#58a6ff", bluehover:"#388bfd" },
+            darker:   { bg:"#0a0a0a", sidebar:"#050505", surface:"#111",    surface2:"#181818", border:"#222",    text:"#e8e8e8", muted:"#555",    blue:"#3b82f6", bluehover:"#2563eb" },
+            white:    { bg:"#f5f5f5", sidebar:"#ebebeb", surface:"#ffffff", surface2:"#f0f0f0", border:"#ddd",    text:"#1a1a1a", muted:"#888",    blue:"#2563eb", bluehover:"#1d4ed8" },
+            ocean:    { bg:"#0a1628", sidebar:"#061020", surface:"#0f2040", surface2:"#162a50", border:"#1e3a60", text:"#c8dff5", muted:"#5a7a9a", blue:"#38bdf8", bluehover:"#0ea5e9" },
+            forest:   { bg:"#0d1f12", sidebar:"#081510", surface:"#132a18", surface2:"#1a3520", border:"#234a2c", text:"#d4edda", muted:"#5a7a60", blue:"#4ade80", bluehover:"#22c55e" },
+            rose:     { bg:"#1f0d14", sidebar:"#150810", surface:"#2a1320", surface2:"#351828", border:"#4a2035", text:"#f5d0de", muted:"#7a5060", blue:"#f472b6", bluehover:"#ec4899" },
+            amber:    { bg:"#1a1200", sidebar:"#110c00", surface:"#221a00", surface2:"#2d2200", border:"#3d3000", text:"#fef3c7", muted:"#7a6030", blue:"#fbbf24", bluehover:"#f59e0b" },
+            violet:   { bg:"#100d1f", sidebar:"#080614", surface:"#18142e", surface2:"#201a3a", border:"#2e2550", text:"#e8e0ff", muted:"#6a5a8a", blue:"#a78bfa", bluehover:"#8b5cf6" },
+            slate:    { bg:"#0f172a", sidebar:"#080f1e", surface:"#1e293b", surface2:"#273548", border:"#334155", text:"#e2e8f0", muted:"#64748b", blue:"#60a5fa", bluehover:"#3b82f6" },
+        };
         const t = themes[cfg.theme] || themes.dark;
         const r = document.documentElement;
-        r.style.setProperty("--bg",t[0]); r.style.setProperty("--sidebar",t[1]); r.style.setProperty("--surface",t[2]); r.style.setProperty("--surface2",t[3]); r.style.setProperty("--border",t[4]);
+        r.style.setProperty("--bg", t.bg);
+        r.style.setProperty("--sidebar", t.sidebar);
+        r.style.setProperty("--surface", t.surface);
+        r.style.setProperty("--surface2", t.surface2);
+        r.style.setProperty("--border", t.border);
+        r.style.setProperty("--text", t.text);
+        r.style.setProperty("--muted", t.muted);
+        r.style.setProperty("--blue", t.blue);
+        r.style.setProperty("--blue-hover", t.bluehover);
+        // Convert hex color to rgba for blue-dim
+        const hexToRgba = (hex, a) => {
+            const h = hex.replace("#","");
+            const r2=parseInt(h.slice(0,2),16), g=parseInt(h.slice(2,4),16), b=parseInt(h.slice(4,6),16);
+            return `rgba(${r2},${g},${b},${a})`;
+        };
+        r.style.setProperty("--blue-dim", hexToRgba(t.blue, 0.12));
+        // Also update code theme for light mode
+        if(cfg.theme === "white") {
+            r.style.setProperty("--code-bg", "#f8f8f8");
+            r.style.setProperty("--code-border", "#ddd");
+        } else {
+            r.style.setProperty("--code-bg", "#161616");
+            r.style.setProperty("--code-border", "#2e2e2e");
+        }
         document.getElementById("messages").style.fontSize = cfg.fontsize + "px";
         document.getElementById("cfg-typing").checked = cfg.typing;
         document.getElementById("cfg-markdown").checked = cfg.markdown;
