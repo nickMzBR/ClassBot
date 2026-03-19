@@ -399,6 +399,12 @@
         @media (max-width: 768px) {
             #preview-panel { width: 100%; min-width: unset; border-left: none; }
         }
+        .typing-cursor::after {
+            content: '▋'; color: var(--blue); font-size: 13px;
+            animation: blink-cursor .6s step-end infinite;
+        }
+        @keyframes blink-cursor { 0%,100%{opacity:1} 50%{opacity:0} }
+
         /* ── MODAL ── */
         #img-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.9); z-index: 3000; align-items: center; justify-content: center; cursor: zoom-out; animation: fadeIn .15s ease; }
         #img-modal.show { display: flex; }
@@ -732,7 +738,26 @@
         if (m.text) addMsgDOM(m.text, role, false);
     }
 
-    // ── SEND ──
+    function digitarTexto(el, txt) {
+        let i = 0;
+        el.textContent = '';
+        el.classList.add('typing-cursor');
+        const tick = () => {
+            if (i < txt.length) {
+                el.textContent += txt.slice(i, i + 3);
+                i += 3;
+                scrollBottom();
+                setTimeout(tick, 10);
+            } else {
+                el.classList.remove('typing-cursor');
+                el.innerHTML = marked.parse(txt);
+                scrollBottom();
+            }
+        };
+        tick();
+    }
+
+        // ── SEND ──
     window.enviar = async () => {
         if (sending) return;
         const input = document.getElementById('userInput');
@@ -804,7 +829,8 @@
             document.getElementById('typing')?.remove();
 
             if (data.answer) {
-                addMsgDOM(data.answer, 'bot', false);
+                const botEl = addMsgDOM('', 'bot', false);
+                digitarTexto(botEl, data.answer);
                 historico.push({ role: "assistant", text: data.answer });
 
                 // Auto-title first message
