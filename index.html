@@ -434,14 +434,31 @@
         const box = addMsgDOM("…", 'bot', true);
 
         try {
+            // Build messages for API — images sent as image_url for vision model
             const mensagensAPI = historico
-                .filter(m => m.text || m.files)
-                .map(m => ({
-                    role: m.role,
-                    content: (m.files?.map(f => f.type.startsWith('image/') ? `[Imagem: ${f.name}]` : `[Arquivo: ${f.name}]`).join('\n') || '') +
-                             (m.text ? (m.files?.length ? '\n' + m.text : m.text) : '')
-                }))
-                .filter(m => m.content.trim())
+                .filter(m => m.text || (m.files && m.files.length > 0))
+                .map(m => {
+                    const hasImgs = m.files?.some(f => f.type.startsWith('image/'));
+                    if (hasImgs) {
+                        // Multimodal content array
+                        const parts = [];
+                        m.files.forEach(f => {
+                            if (f.type.startsWith('image/')) {
+                                parts.push({ type: 'image_url', image_url: { url: f.dataUrl } });
+                            } else {
+                                parts.push({ type: 'text', text: `[Arquivo: ${f.name}]` });
+                            }
+                        });
+                        if (m.text) parts.push({ type: 'text', text: m.text });
+                        return { role: m.role, content: parts };
+                    } else {
+                        // Text only
+                        let txt = m.files?.map(f => `[Arquivo: ${f.name}]`).join('\n') || '';
+                        if (m.text) txt += (txt ? '\n' : '') + m.text;
+                        return { role: m.role, content: txt };
+                    }
+                })
+                .filter(m => m.content && (Array.isArray(m.content) ? m.content.length > 0 : m.content.trim()))
                 .slice(-8);
 
             const res = await fetch("/api/chat", {
