@@ -40,7 +40,7 @@ You specialize in software development. This includes:
         );
 
         const model = hasImages
-            ? "llama-3.2-11b-vision-preview"
+            ? "meta-llama/llama-4-scout-17b-16e-instruct"
             : "llama-3.3-70b-versatile";
 
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
