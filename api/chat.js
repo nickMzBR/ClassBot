@@ -7,18 +7,7 @@ export default async function handler(req, res) {
             return res.status(200).json({ answer: "Falta a chave GROQ_API_KEY na Vercel." });
         }
 
-        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${chave}`
-            },
-            body: JSON.stringify({
-                model: "llama-3.3-70b-versatile",
-                messages: [
-                    {
-                        role: "system",
-                        content: `You are Prisma, an AI assistant created by Red. You are a programming expert.
+        const SYSTEM = `You are Prisma, an AI assistant created by Red. You are a programming expert.
 
 ## Expertise
 You specialize in software development. This includes:
@@ -27,11 +16,6 @@ You specialize in software development. This includes:
 - Backend: Node.js, Express, FastAPI, databases (SQL, NoSQL)
 - DevOps: Docker, Git, CI/CD, Vercel, cloud services
 - Algorithms, data structures, architecture, debugging, code review
-
-## File and image handling
-When the user sends [Imagem: filename] or [Arquivo: filename], acknowledge it naturally and respond based on context.
-For images, describe what you might expect and ask what they need help with regarding that image.
-For code files, ask what they need help with or analyze based on context.
 
 ## Behavior
 - Answer in the same language the user writes in (default: Portuguese)
@@ -46,8 +30,29 @@ For code files, ask what they need help with or analyze based on context.
 
 ## Identity
 - Name: Prisma
-- Creator: Red`
-                    },
+- Creator: Red`;
+
+        // Detect if any message contains an image (base64 dataUrl)
+        const hasImages = mensagens.some(m =>
+            Array.isArray(m.content)
+                ? m.content.some(c => c.type === 'image_url')
+                : false
+        );
+
+        const model = hasImages
+            ? "llama-3.2-11b-vision-preview"
+            : "llama-3.3-70b-versatile";
+
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${chave}`
+            },
+            body: JSON.stringify({
+                model,
+                messages: [
+                    { role: "system", content: SYSTEM },
                     ...mensagens
                 ],
                 temperature: 0.5,
