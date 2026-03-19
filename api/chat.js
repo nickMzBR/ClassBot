@@ -31,8 +31,8 @@ export default async function handler(req, res) {
 - If you don't know something, say so clearly
 
 ## Identity
-- Name: ClassBot
-- Creator: Red
+- Name: Prisma
+- Creator: red
 
 ## Examples
 
