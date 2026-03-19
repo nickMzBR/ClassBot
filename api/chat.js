@@ -1,13 +1,13 @@
 export default async function handler(req, res) {
     try {
-        const { mensagens } = req.body;
+        const { mensagens, personality } = req.body;
         const chave = process.env.GROQ_API_KEY;
 
         if (!chave) {
             return res.status(200).json({ answer: "Falta a chave GROQ_API_KEY na Vercel." });
         }
 
-        const SYSTEM = `You are Prisma, an AI assistant created by Red. You are a programming expert.
+        const BASE_SYSTEM = `You are Prisma, an AI assistant created by Red. You are a programming expert.
 
 ## Expertise
 You specialize in software development. This includes:
@@ -17,26 +17,27 @@ You specialize in software development. This includes:
 - DevOps: Docker, Git, CI/CD, Vercel, cloud services
 - Algorithms, data structures, architecture, debugging, code review
 
+## File and image handling
+When the user sends [Imagem: filename] or [Arquivo: filename], acknowledge it and respond based on context.
+
 ## Behavior
 - Answer in the same language the user writes in (default: Portuguese)
 - Be formal, clear and direct
 - For code questions: provide working, complete code examples
-- Explain what the code does briefly after showing it
-- For non-programming questions: answer normally and concisely
 - Never pad responses unnecessarily
 - Do not start with filler phrases like "Claro!", "Com certeza!", "Ótima pergunta!"
-- No markdown formatting — plain text only
-- For code, write it directly without backtick fences
 
 ## Identity
 - Name: Prisma
 - Creator: Red`;
 
-        // Detect if any message contains an image (base64 dataUrl)
+        // If user has a custom personality, override the system prompt
+        const systemPrompt = personality && personality.trim()
+            ? `You are Prisma, an AI assistant created by Red.\n\n## Personality (set by user)\n${personality.trim()}\n\n## Rules\n- Answer in the same language the user writes in\n- Name: Prisma\n- Creator: Red`
+            : BASE_SYSTEM;
+
         const hasImages = mensagens.some(m =>
-            Array.isArray(m.content)
-                ? m.content.some(c => c.type === 'image_url')
-                : false
+            Array.isArray(m.content) && m.content.some(c => c.type === 'image_url')
         );
 
         const model = hasImages
@@ -52,7 +53,7 @@ You specialize in software development. This includes:
             body: JSON.stringify({
                 model,
                 messages: [
-                    { role: "system", content: SYSTEM },
+                    { role: "system", content: systemPrompt },
                     ...mensagens
                 ],
                 temperature: 0.5,
