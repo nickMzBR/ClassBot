@@ -775,14 +775,6 @@
     let sending = false;
     let pendingFiles = [];
 
-    if (usuario) {
-        document.getElementById('login-overlay').style.display = 'none';
-        document.getElementById('user-name').textContent = usuario;
-        escutarConversas();
-        loadCfg();
-        loadMemory();
-    }
-
     window.toggleMenu = () => {
         document.getElementById('sidebar').classList.toggle('open');
         document.getElementById('mob-overlay').classList.toggle('show');
@@ -1528,6 +1520,19 @@ Array JSON:`
         const w = document.getElementById('messages-wrap');
         w.scrollTop = w.scrollHeight;
     }
+
+    // ── INIT ── (called after all functions are defined)
+    async function init() {
+        if (usuario) {
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('user-name').textContent = usuario;
+            escutarConversas();
+            await loadCfg();
+            await loadMemory();
+        }
+    }
+
+    init();
 </script>
 </body>
 </html>
