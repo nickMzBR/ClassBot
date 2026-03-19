@@ -671,6 +671,43 @@
                 </button>
             </div>
 
+            <div class="settings-divider"></div>
+            <div class="settings-section" style="display:flex;align-items:center;justify-content:space-between;padding-right:20px;">
+                <span>Memória</span>
+                <span id="memory-count" style="font-size:10px;color:var(--muted);font-weight:400;letter-spacing:0;">0 factos</span>
+            </div>
+            <div style="padding:4px 20px 14px;">
+                <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">
+                    O Prisma lembra factos sobre si entre conversas. Podes gerir, editar ou adicionar memórias manualmente.
+                </div>
+                <!-- Add memory input -->
+                <div style="display:flex;gap:6px;margin-bottom:12px;">
+                    <input id="new-memory-input" type="text" placeholder="Adicionar facto... ex: Trabalho com React"
+                        style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+                        padding:8px 11px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;
+                        transition:border-color .2s;"
+                        onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'"
+                        onkeydown="if(event.key==='Enter')addMemoryItem()">
+                    <button onclick="addMemoryItem()" style="padding:8px 13px;border-radius:8px;
+                        background:var(--blue);border:none;color:#fff;font-family:'Inter',sans-serif;
+                        font-size:13px;cursor:pointer;white-space:nowrap;transition:background .15s;"
+                        onmouseover="this.style.background='var(--blue-hover)'" onmouseout="this.style.background='var(--blue)'">
+                        + Adicionar
+                    </button>
+                </div>
+                <!-- Memory list -->
+                <div id="memory-list" style="display:flex;flex-direction:column;gap:5px;max-height:220px;overflow-y:auto;margin-bottom:12px;"></div>
+                <!-- Footer actions -->
+                <div style="display:flex;gap:8px;">
+                    <button onclick="clearMemory()" style="flex:1;padding:8px;border-radius:8px;
+                        background:transparent;border:1px solid var(--danger);color:var(--danger);
+                        font-family:'Inter',sans-serif;font-size:12.5px;cursor:pointer;transition:background .15s;"
+                        onmouseover="this.style.background='rgba(239,68,68,0.08)'" onmouseout="this.style.background='transparent'">
+                        Apagar tudo
+                    </button>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
@@ -743,6 +780,7 @@
         document.getElementById('user-name').textContent = usuario;
         escutarConversas();
         loadCfg();
+        loadMemory();
     }
 
     window.toggleMenu = () => {
@@ -1028,7 +1066,7 @@
             const res = await fetch("/api/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ mensagens: mensagensAPI, personality: cfg.personality || '' })
+                body: JSON.stringify({ mensagens: mensagensAPI, personality: cfg.personality || '', memory: userMemory })
             });
             const data = await res.json();
             document.getElementById('typing')?.remove();
@@ -1037,6 +1075,9 @@
                 const botEl = addMsgDOM('', 'bot', false);
                 digitarTexto(botEl, data.answer);
                 historico.push({ role: "assistant", text: data.answer });
+
+                // Extract memory in background (no await — don't block UI)
+                if (text) extractAndSaveMemory(text, data.answer);
 
                 // Auto-title first message
                 const isFirst = historico.filter(m => m.role === 'user').length === 1;
@@ -1331,6 +1372,7 @@ try { ${currentPreviewCode} } catch(e) { document.getElementById('out').textCont
 
     window.openSettings = () => {
         applyAllSettings();
+        renderMemoryList();
         document.getElementById('settings-overlay').classList.add('show');
     };
 
@@ -1345,6 +1387,129 @@ try { ${currentPreviewCode} } catch(e) { document.getElementById('out').textCont
             if (sendOnEnter && !e.shiftKey) { e.preventDefault(); enviar(); }
             else if (!sendOnEnter && e.ctrlKey) { e.preventDefault(); enviar(); }
         }
+    };
+
+
+    // ── MEMORY ──
+    let userMemory = []; // array of strings
+
+    async function loadMemory() {
+        if (!usuario) return;
+        try {
+            const snap = await get(ref(db, `memoria/${usuario}`));
+            userMemory = snap.exists() ? (snap.val() || []) : [];
+        } catch(e) { userMemory = []; }
+    }
+
+    async function saveMemory() {
+        if (!usuario) return;
+        try { await set(ref(db, `memoria/${usuario}`), userMemory); } catch(e) {}
+    }
+
+    async function extractAndSaveMemory(userText, botText) {
+        if (!userText || !botText) return;
+        try {
+            const res = await fetch("/api/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    mensagens: [{
+                        role: "user",
+                        content: `Analisa esta conversa e extrai APENAS factos importantes e duradouros sobre o UTILIZADOR (nome, profissão, projetos, preferências, tecnologias usadas, objetivos).
+
+Mensagem do utilizador: "${userText}"
+Resposta do assistente: "${botText}"
+
+Responde APENAS com um array JSON de strings, cada uma sendo um facto curto (máx 15 palavras). Se não houver factos relevantes, responde com []. Exemplo: ["Usa React no trabalho", "Projeto atual: app de fitness"]
+
+Array JSON:`
+                    }],
+                    personality: ''
+                })
+            });
+            const data = await res.json();
+            if (!data.answer) return;
+            // Parse JSON from response
+            const match = data.answer.match(/\[.*\]/s);
+            if (!match) return;
+            const newFacts = JSON.parse(match[0]);
+            if (!Array.isArray(newFacts) || newFacts.length === 0) return;
+            // Merge avoiding duplicates (simple check)
+            newFacts.forEach(fact => {
+                const exists = userMemory.some(m => m.toLowerCase().includes(fact.toLowerCase().slice(0,20)));
+                if (!exists) userMemory.push(fact);
+            });
+            // Keep max 30 facts
+            if (userMemory.length > 30) userMemory = userMemory.slice(-30);
+            await saveMemory();
+            renderMemoryList();
+        } catch(e) {}
+    }
+
+    window.clearMemory = async () => {
+        if (!confirm("Apagar toda a memória do Prisma sobre si?")) return;
+        userMemory = [];
+        await saveMemory();
+        renderMemoryList();
+    };
+
+    window.deleteMemoryItem = async (idx) => {
+        userMemory.splice(idx, 1);
+        await saveMemory();
+        renderMemoryList();
+    };
+
+    function renderMemoryList() {
+        const box = document.getElementById('memory-list');
+        const countEl = document.getElementById('memory-count');
+        if (!box) return;
+        box.innerHTML = '';
+        if (countEl) countEl.textContent = userMemory.length + ' facto' + (userMemory.length !== 1 ? 's' : '');
+        if (userMemory.length === 0) {
+            box.innerHTML = '<div style="font-size:12px;color:var(--muted);font-style:italic;padding:4px 0;">Nenhuma memória ainda. O Prisma vai aprendendo à medida que conversa.</div>';
+            return;
+        }
+        userMemory.forEach((fact, i) => {
+            const row = document.createElement('div');
+            row.style.cssText = 'display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 10px;animation:slideUp .15s ease both;';
+            // Editable fact
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = fact;
+            input.style.cssText = 'flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:'Inter',sans-serif;font-size:12.5px;min-width:0;';
+            input.onchange = async () => {
+                if (input.value.trim()) {
+                    userMemory[i] = input.value.trim();
+                    await saveMemory();
+                    renderMemoryList();
+                }
+            };
+            input.onkeydown = (e) => { if (e.key === 'Enter') input.blur(); };
+            const delBtn = document.createElement('button');
+            delBtn.innerHTML = '✕';
+            delBtn.style.cssText = 'background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:0 2px;flex-shrink:0;transition:color .15s;';
+            delBtn.onmouseover = () => delBtn.style.color = 'var(--danger)';
+            delBtn.onmouseout = () => delBtn.style.color = 'var(--muted)';
+            delBtn.onclick = () => deleteMemoryItem(i);
+            row.appendChild(input);
+            row.appendChild(delBtn);
+            box.appendChild(row);
+        });
+    }
+
+    window.addMemoryItem = async () => {
+        const input = document.getElementById('new-memory-input');
+        const val = input?.value.trim();
+        if (!val) return;
+        const exists = userMemory.some(m => m.toLowerCase() === val.toLowerCase());
+        if (exists) { input.value = ''; return; }
+        userMemory.push(val);
+        await saveMemory();
+        input.value = '';
+        renderMemoryList();
+        // Scroll list to bottom
+        const box = document.getElementById('memory-list');
+        if (box) box.scrollTop = box.scrollHeight;
     };
 
     function scrollBottom() {
