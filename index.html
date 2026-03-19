@@ -3,204 +3,529 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ClassBot V1.16</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Prisma</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #007bff; --bg: #1e1e1e; --sidebar: #121212; --card: #2d2d2d; --white: #ffffff; }
-        * { box-sizing: border-box; font-family: 'Montserrat', sans-serif; margin: 0; padding: 0; }
-        
-        body, html { height: 100dvh; width: 100%; background: var(--bg); color: var(--white); overflow: hidden; display: flex; position: fixed; }
+        :root {
+            --bg: #1a1a1a;
+            --sidebar: #111;
+            --surface: #222;
+            --surface2: #2a2a2a;
+            --border: #333;
+            --blue: #3b82f6;
+            --blue-hover: #2563eb;
+            --blue-dim: rgba(59,130,246,0.12);
+            --text: #efefef;
+            --muted: #666;
+            --danger: #ef4444;
+        }
 
-        /* Login */
-        #login-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .auth-box { width: 90%; max-width: 320px; text-align: center; background: var(--card); padding: 30px; border-radius: 15px; }
-        .auth-input { width: 100%; padding: 12px; margin-bottom: 12px; border-radius: 8px; border: 1px solid #444; background: #121212; color: white; outline: none; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        /* Sidebar */
-        #sidebar { width: 280px; background: var(--sidebar); display: flex; flex-direction: column; border-right: 1px solid #333; transition: transform 0.3s ease; z-index: 1000; }
-        .new-chat { margin: 15px; padding: 12px; border: 1px solid #444; border-radius: 8px; cursor: pointer; text-align: center; font-weight: 600; color: white; background: transparent; }
-        #chat-list { flex: 1; overflow-y: auto; padding: 0 10px; }
-        .chat-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; margin-bottom: 8px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; color: #ccc; }
-        .chat-item:hover, .chat-item.active { background: var(--card); color: white; }
-        .chat-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+        body, html {
+            height: 100dvh; width: 100%;
+            background: var(--bg); color: var(--text);
+            font-family: 'Inter', sans-serif; font-size: 14px;
+            overflow: hidden; display: flex; position: fixed;
+            -webkit-font-smoothing: antialiased;
+        }
 
-        /* Rodapé com botão Sair */
-        .user-footer { padding: 20px; padding-bottom: calc(20px + env(safe-area-inset-bottom)); border-top: 1px solid #333; background: #0d0d0d; display: flex; flex-direction: column; gap: 10px; }
-        .user-info { font-size: 0.9rem; font-weight: 600; color: var(--primary); display: flex; align-items: center; gap: 8px; }
-        .btn-sair { width: 100%; padding: 10px; background: #ff444422; color: #ff4444; border: 1px solid #ff444444; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 0.75rem; text-align: center; }
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-        /* Main */
-        #main { flex: 1; display: flex; flex-direction: column; height: 100dvh; }
-        header { padding: 15px 20px; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 15px; background: #1e1e1e; padding-top: calc(15px + env(safe-area-inset-top)); }
-        .menu-toggle { display: block; cursor: pointer; font-size: 1.5rem; }
-        #messages { flex: 1; overflow-y: auto; padding: 20px; width: 100%; max-width: 800px; margin: 0 auto; }
-        .msg-row { margin-bottom: 25px; }
-        .msg-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; color: var(--primary); }
-        .msg-content { font-size: 1rem; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+        /* ── LOGIN ── */
+        #login-overlay {
+            position: fixed; inset: 0; background: var(--bg);
+            z-index: 2000; display: flex; align-items: center; justify-content: center;
+        }
 
-        /* Barra de Digitação */
-        #input-area { padding: 15px 20px; padding-bottom: calc(15px + env(safe-area-inset-bottom)); width: 100%; max-width: 800px; margin: 0 auto; }
-        .input-box { display: flex; background: var(--card); border-radius: 12px; padding: 8px 12px; border: 1px solid #444; align-items: center; }
-        #userInput { flex: 1; background: transparent; border: none; color: white; outline: none; font-size: 16px; padding: 8px; }
-        #sendBtn { background: var(--primary); border: none; color: white; width: 40px; height: 40px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .auth-card {
+            width: 90%; max-width: 320px;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 14px; padding: 32px 28px;
+        }
+
+        .auth-logo {
+            width: 40px; height: 40px; border-radius: 10px;
+            background: var(--blue); display: flex; align-items: center; justify-content: center;
+            font-family: 'IBM Plex Mono', monospace; font-weight: 500; font-size: 16px;
+            color: #fff; margin: 0 auto 18px;
+        }
+
+        .auth-card h2 { text-align: center; font-size: 17px; font-weight: 600; margin-bottom: 4px; }
+        .auth-card p { text-align: center; color: var(--muted); font-size: 12px; margin-bottom: 22px; }
+
+        .auth-input {
+            width: 100%; padding: 10px 13px; margin-bottom: 9px;
+            border-radius: 8px; border: 1px solid var(--border);
+            background: var(--surface2); color: var(--text);
+            font-family: 'Inter', sans-serif; font-size: 14px;
+            outline: none; transition: border-color .2s;
+        }
+
+        .auth-input:focus { border-color: var(--blue); }
+        .auth-input::placeholder { color: var(--muted); }
+
+        .btn-primary {
+            width: 100%; padding: 10px; border-radius: 8px;
+            background: var(--blue); border: none; color: #fff;
+            font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14px;
+            cursor: pointer; transition: background .15s; margin-top: 2px;
+        }
+
+        .btn-primary:hover { background: var(--blue-hover); }
+
+        .auth-link {
+            display: block; text-align: center; margin-top: 13px;
+            color: var(--muted); font-size: 12px; cursor: pointer;
+            background: none; border: none; font-family: 'Inter', sans-serif;
+        }
+
+        .auth-link:hover { color: var(--text); }
+
+        /* ── SIDEBAR ── */
+        #sidebar {
+            width: 255px; background: var(--sidebar);
+            display: flex; flex-direction: column;
+            border-right: 1px solid var(--border);
+            transition: transform .25s ease; z-index: 1000;
+        }
+
+        .sidebar-top {
+            padding: 16px 14px 12px;
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 9px;
+        }
+
+        .s-logo {
+            width: 27px; height: 27px; border-radius: 7px;
+            background: var(--blue); display: flex; align-items: center; justify-content: center;
+            font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #fff; flex-shrink: 0;
+        }
+
+        .s-title { font-weight: 600; font-size: 14px; }
+
+        .btn-new {
+            margin: 10px 12px; padding: 9px 12px;
+            border: 1px solid var(--border); border-radius: 8px;
+            cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px;
+            font-weight: 500; color: var(--text); background: transparent;
+            display: flex; align-items: center; gap: 7px;
+            transition: background .15s, border-color .15s;
+        }
+
+        .btn-new:hover { background: var(--surface); border-color: #444; }
+
+        #chat-list { flex: 1; overflow-y: auto; padding: 4px 8px; }
+
+        .chat-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px 10px; margin-bottom: 2px; border-radius: 7px;
+            cursor: pointer; color: var(--muted); transition: background .15s, color .15s; gap: 8px;
+        }
+
+        .chat-item:hover { background: var(--surface); color: var(--text); }
+        .chat-item.active { background: var(--surface2); color: var(--text); }
+
+        .chat-name {
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            flex: 1; font-size: 13px;
+        }
+
+        .chat-del {
+            opacity: 0; font-size: 13px; flex-shrink: 0;
+            transition: opacity .15s; color: var(--muted); background: none; border: none; cursor: pointer;
+        }
+
+        .chat-item:hover .chat-del { opacity: 1; }
+        .chat-del:hover { color: var(--danger); }
+
+        .user-footer {
+            padding: 12px 14px; padding-bottom: calc(12px + env(safe-area-inset-bottom));
+            border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+        }
+
+        .user-name { font-size: 13px; font-weight: 500; }
+
+        .btn-logout {
+            padding: 5px 9px; border-radius: 6px; font-size: 11px; font-weight: 600;
+            cursor: pointer; font-family: 'Inter', sans-serif;
+            background: transparent; color: var(--muted); border: 1px solid var(--border);
+            transition: all .15s; white-space: nowrap;
+        }
+
+        .btn-logout:hover { border-color: var(--danger); color: var(--danger); }
+
+        /* ── MAIN ── */
+        #main { flex: 1; display: flex; flex-direction: column; height: 100dvh; min-width: 0; }
+
+        header {
+            padding: 13px 20px; padding-top: calc(13px + env(safe-area-inset-top));
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 12px;
+            background: var(--bg); flex-shrink: 0;
+        }
+
+        .menu-toggle {
+            display: none; cursor: pointer; background: none; border: none;
+            color: var(--muted); padding: 4px; border-radius: 5px;
+            font-size: 18px; line-height: 1;
+        }
+
+        .menu-toggle:hover { color: var(--text); }
+
+        .header-title { font-weight: 600; font-size: 15px; }
+        .header-sub { font-size: 11px; color: var(--muted); margin-left: auto; font-family: 'IBM Plex Mono', monospace; }
+
+        /* ── MESSAGES ── */
+        #messages-wrap { flex: 1; overflow-y: auto; }
+
+        #messages {
+            padding: 24px 20px; width: 100%;
+            max-width: 740px; margin: 0 auto;
+            display: flex; flex-direction: column; gap: 22px;
+            min-height: 100%;
+        }
+
+        .empty-state {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            text-align: center; color: var(--muted); gap: 10px;
+        }
+
+        .empty-icon {
+            width: 46px; height: 46px; border-radius: 12px;
+            background: var(--surface); border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'IBM Plex Mono', monospace; font-size: 19px;
+            color: var(--blue); margin-bottom: 4px;
+        }
+
+        .empty-state h3 { font-size: 15px; font-weight: 600; color: var(--text); }
+        .empty-state p { font-size: 13px; max-width: 240px; line-height: 1.6; }
+
+        .msg-row { display: flex; flex-direction: column; gap: 5px; }
+
+        .msg-label {
+            font-size: 10.5px; font-weight: 600; text-transform: uppercase;
+            letter-spacing: .06em; color: var(--muted);
+        }
+
+        .msg-label.bot { color: var(--blue); }
+
+        .msg-content {
+            font-size: 14px; line-height: 1.75;
+            white-space: pre-wrap; word-break: break-word;
+        }
+
+        .msg-content.user-bubble {
+            display: inline-block; max-width: 82%;
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 10px; padding: 9px 13px;
+        }
+
+        /* ── INPUT ── */
+        #input-area {
+            padding: 10px 20px; padding-bottom: calc(10px + env(safe-area-inset-bottom));
+            width: 100%; max-width: 740px; margin: 0 auto; flex-shrink: 0;
+        }
+
+        .input-box {
+            display: flex; background: var(--surface2);
+            border-radius: 11px; border: 1px solid var(--border);
+            align-items: flex-end; padding: 7px 7px 7px 13px; gap: 8px;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        .input-box:focus-within {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px var(--blue-dim);
+        }
+
+        #userInput {
+            flex: 1; background: transparent; border: none; color: var(--text);
+            outline: none; font-family: 'Inter', sans-serif; font-size: 14px;
+            line-height: 1.5; resize: none; min-height: 22px; max-height: 110px;
+            overflow-y: auto; padding: 4px 0;
+        }
+
+        #userInput::placeholder { color: var(--muted); }
+
+        #sendBtn {
+            width: 32px; height: 32px; border-radius: 7px; flex-shrink: 0;
+            background: var(--blue); border: none; color: white; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: background .15s, transform .1s;
+        }
+
+        #sendBtn:hover { background: var(--blue-hover); }
+        #sendBtn:active { transform: scale(.93); }
+        #sendBtn:disabled { opacity: .35; cursor: not-allowed; }
+        #sendBtn svg { width: 15px; height: 15px; }
+
+        .hint { text-align: center; font-size: 10.5px; color: var(--muted); margin-top: 8px; opacity: .5; }
+
+        /* ── MOBILE ── */
+        #mob-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,.65); z-index: 900;
+        }
 
         @media (max-width: 768px) {
-            #sidebar { position: fixed; height: 100dvh; left: 0; transform: translateX(-100%); width: 280px; }
-            #sidebar.open { transform: translateX(0); box-shadow: 10px 0 50px rgba(0,0,0,0.8); }
-            .overlay-active { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 900; display: none; }
-            .overlay-active.show { display: block; }
+            #sidebar {
+                position: fixed; height: 100dvh; left: 0;
+                transform: translateX(-100%); width: 255px;
+            }
+            #sidebar.open { transform: translateX(0); box-shadow: 8px 0 40px rgba(0,0,0,.8); }
+            #mob-overlay.show { display: block; }
+            .menu-toggle { display: block; }
         }
     </style>
 </head>
 <body>
 
-    <div id="login-overlay">
-        <div class="auth-box">
-            <h1 style="color: var(--primary); margin-bottom: 10px;">ClassBot</h1>
-            <input type="text" id="userLogin" class="auth-input" placeholder="Usuário">
-            <input type="password" id="passLogin" class="auth-input" placeholder="Senha">
-            <button onclick="entrar()" style="width:100%; padding:12px; background:var(--primary); border:none; border-radius:8px; color:white; font-weight:bold; cursor:pointer;">ACESSAR</button>
-            <button onclick="cadastrar()" style="background:none; border:none; color:#666; margin-top:15px; cursor:pointer; font-size:0.8rem;">Criar conta</button>
-        </div>
+<div id="login-overlay">
+    <div class="auth-card">
+        <div class="auth-logo">C</div>
+        <h2>Prisma</h2>
+        <p>Entra para continuar</p>
+        <input type="text" id="userLogin" class="auth-input" placeholder="Usuário">
+        <input type="password" id="passLogin" class="auth-input" placeholder="Senha">
+        <button class="btn-primary" onclick="entrar()">Entrar</button>
+        <button class="auth-link" onclick="cadastrar()">Criar conta</button>
     </div>
+</div>
 
-    <div id="mobile-overlay" class="overlay-active" onclick="toggleMenu()"></div>
+<div id="mob-overlay" onclick="toggleMenu()"></div>
 
-    <aside id="sidebar">
-        <button class="new-chat" onclick="novaConversa()">+ Nova conversa</button>
-        <div id="chat-list"></div>
-        <div class="user-footer">
-            <div class="user-info">👤 <span id="user-name">Usuário</span></div>
-            <button class="btn-sair" onclick="sair()">ENCERRAR SESSÃO</button>
-        </div>
-    </aside>
+<aside id="sidebar">
+    <div class="sidebar-top">
+        <div class="s-logo">C</div>
+        <span class="s-title">Prisma</span>
+    </div>
+    <button class="btn-new" onclick="novaConversa()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        Nova conversa
+    </button>
+    <div id="chat-list"></div>
+    <div class="user-footer">
+        <span class="user-name" id="user-name">—</span>
+        <button class="btn-logout" onclick="sair()">Sair</button>
+    </div>
+</aside>
 
-    <main id="main">
-        <header><div class="menu-toggle" onclick="toggleMenu()">☰</div><strong>ClassBot</strong></header>
-        <div id="messages"></div>
-        <div id="input-area">
-            <div class="input-box">
-                <input type="text" id="userInput" placeholder="Manda a braba..." autocomplete="off">
-                <button id="sendBtn">↑</button>
+<main id="main">
+    <header>
+        <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+        <span class="header-title">Prisma</span>
+        <span class="header-sub">llama-3.3-70b</span>
+    </header>
+    <div id="messages-wrap">
+        <div id="messages">
+            <div class="empty-state" id="empty">
+                <div class="empty-icon">C</div>
+                <h3>Como posso ajudar?</h3>
+                <p>Inicia uma conversa ou seleciona uma anterior.</p>
             </div>
         </div>
-    </main>
+    </div>
+    <div id="input-area">
+        <div class="input-box">
+            <textarea id="userInput" placeholder="Escreve uma mensagem..." rows="1"
+                oninput="resizeInput(this)" onkeydown="keyHandler(event)"></textarea>
+            <button id="sendBtn" onclick="enviar()">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            </button>
+        </div>
+        <p class="hint">Enter para enviar · Shift+Enter para nova linha</p>
+    </div>
+</main>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, set, get, push, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, get, push, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyB0vSCE32XEg0IL6LaRzmlvfa3qj1priPg",
-            authDomain: "classbot-807d8.firebaseapp.com",
-            databaseURL: "https://classbot-807d8-default-rtdb.firebaseio.com/",
-            projectId: "classbot-807d8",
-            storageBucket: "classbot-807d8.firebasestorage.app",
-            messagingSenderId: "117494419469",
-            appId: "1:117494419469:web:ca12637334e9a7d8090544"
-        };
+    const firebaseConfig = {
+        apiKey: "AIzaSyB0vSCE32XEg0IL6LaRzmlvfa3qj1priPg",
+        authDomain: "classbot-807d8.firebaseapp.com",
+        databaseURL: "https://classbot-807d8-default-rtdb.firebaseio.com/",
+        projectId: "classbot-807d8",
+        storageBucket: "classbot-807d8.firebasestorage.app",
+        messagingSenderId: "117494419469",
+        appId: "1:117494419469:web:ca12637334e9a7d8090544"
+    };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        let usuario = localStorage.getItem("cb_user") || null;
-        let conversaAtivaId = null;
-        let historico = [];
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    let usuario = localStorage.getItem("cb_user") || null;
+    let conversaAtivaId = null;
+    let historico = [];
+    let sending = false;
 
-        if (usuario) {
-            document.getElementById('login-overlay').style.display = 'none';
-            document.getElementById('user-name').textContent = usuario;
-            escutarConversas();
-        }
+    if (usuario) {
+        document.getElementById('login-overlay').style.display = 'none';
+        document.getElementById('user-name').textContent = usuario;
+        escutarConversas();
+    }
 
-        window.toggleMenu = () => {
-            document.getElementById('sidebar').classList.toggle('open');
-            document.getElementById('mobile-overlay').classList.toggle('show');
-        };
+    window.toggleMenu = () => {
+        document.getElementById('sidebar').classList.toggle('open');
+        document.getElementById('mob-overlay').classList.toggle('show');
+    };
 
-        window.entrar = async () => {
-            const u = document.getElementById('userLogin').value.trim().toLowerCase();
-            const p = document.getElementById('passLogin').value.trim();
-            const snap = await get(ref(db, `usuarios/${u}`));
-            if (snap.exists() && snap.val().senha === p) {
-                localStorage.setItem("cb_user", u);
-                location.reload();
-            } else alert("Usuário ou senha inválidos.");
-        };
+    window.resizeInput = (el) => {
+        el.style.height = 'auto';
+        el.style.height = Math.min(el.scrollHeight, 110) + 'px';
+    };
 
-        window.cadastrar = async () => {
-            const u = document.getElementById('userLogin').value.trim().toLowerCase();
-            const p = document.getElementById('passLogin').value.trim();
-            if(!u || p.length < 3) return alert("Dados muito curtos!");
-            await set(ref(db, `usuarios/${u}`), { senha: p });
-            alert("Conta criada!");
-        };
+    window.keyHandler = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar(); }
+    };
 
-        window.sair = () => { localStorage.clear(); location.reload(); };
+    window.entrar = async () => {
+        const u = document.getElementById('userLogin').value.trim().toLowerCase();
+        const p = document.getElementById('passLogin').value.trim();
+        const snap = await get(ref(db, `usuarios/${u}`));
+        if (snap.exists() && snap.val().senha === p) {
+            localStorage.setItem("cb_user", u);
+            location.reload();
+        } else alert("Usuário ou senha inválidos.");
+    };
 
-        function escutarConversas() {
-            onValue(ref(db, `conversas/${usuario}`), (snapshot) => {
-                const list = document.getElementById('chat-list'); list.innerHTML = "";
-                const data = snapshot.val();
-                if (data) Object.keys(data).reverse().forEach(id => {
-                    const item = document.createElement('div');
-                    item.className = `chat-item ${id === conversaAtivaId ? 'active' : ''}`;
-                    item.innerHTML = `<span onclick="abrirConversa('${id}')">${data[id][0]?.content || "..."}</span><div onclick="excluirConversa('${id}')">🗑</div>`;
-                    list.appendChild(item);
-                });
+    window.cadastrar = async () => {
+        const u = document.getElementById('userLogin').value.trim().toLowerCase();
+        const p = document.getElementById('passLogin').value.trim();
+        if (!u || p.length < 3) return alert("Dados muito curtos!");
+        await set(ref(db, `usuarios/${u}`), { senha: p });
+        alert("Conta criada! Podes entrar agora.");
+    };
+
+    window.sair = () => { localStorage.clear(); location.reload(); };
+
+    function escutarConversas() {
+        onValue(ref(db, `conversas/${usuario}`), (snapshot) => {
+            const list = document.getElementById('chat-list');
+            list.innerHTML = "";
+            const data = snapshot.val();
+            if (data) Object.keys(data).reverse().forEach(id => {
+                const label = data[id][0]?.content?.slice(0, 40) || "Conversa";
+                const item = document.createElement('div');
+                item.className = `chat-item ${id === conversaAtivaId ? 'active' : ''}`;
+                item.innerHTML = `
+                    <span class="chat-name" onclick="abrirConversa('${id}')">${label}</span>
+                    <button class="chat-del" onclick="excluirConversa('${id}')">✕</button>`;
+                list.appendChild(item);
             });
+        });
+    }
+
+    window.novaConversa = () => {
+        conversaAtivaId = null; historico = [];
+        document.getElementById('messages').innerHTML = '';
+        document.getElementById('messages').appendChild(emptyState());
+        if (window.innerWidth <= 768) toggleMenu();
+    };
+
+    window.abrirConversa = async (id) => {
+        conversaAtivaId = id;
+        const snap = await get(ref(db, `conversas/${usuario}/${id}`));
+        if (snap.exists()) { historico = snap.val(); renderizar(); }
+        if (window.innerWidth <= 768) toggleMenu();
+    };
+
+    window.excluirConversa = async (id) => {
+        if (confirm("Apagar conversa?")) {
+            await remove(ref(db, `conversas/${usuario}/${id}`));
+            if (conversaAtivaId === id) novaConversa();
         }
+    };
 
-        window.novaConversa = () => { conversaAtivaId = null; historico = []; document.getElementById('messages').innerHTML = ""; if(window.innerWidth <= 768) toggleMenu(); };
+    function emptyState() {
+        const d = document.createElement('div');
+        d.className = 'empty-state'; d.id = 'empty';
+        d.innerHTML = `<div class="empty-icon">C</div><h3>Como posso ajudar?</h3><p>Inicia uma conversa ou seleciona uma anterior.</p>`;
+        return d;
+    }
 
-        window.abrirConversa = async (id) => {
-            conversaAtivaId = id;
-            const snap = await get(ref(db, `conversas/${usuario}/${id}`));
-            if (snap.exists()) { historico = snap.val(); renderizar(); }
-            if(window.innerWidth <= 768) toggleMenu();
+    function renderizar() {
+        const c = document.getElementById('messages');
+        c.innerHTML = '';
+        historico.forEach(m => addMsgDOM(m.content, m.role === 'user' ? 'user' : 'bot', false));
+        scrollBottom();
+    }
+
+    function digitarTexto(el, txt) {
+        let i = 0; el.textContent = "";
+        const tick = () => {
+            if (i < txt.length) { el.textContent += txt.charAt(i++); scrollBottom(); setTimeout(tick, 8); }
         };
+        tick();
+    }
 
-        window.excluirConversa = async (id) => { if(confirm("Apagar?")) { await remove(ref(db, `conversas/${usuario}/${id}`)); if(conversaAtivaId === id) novaConversa(); } };
+    window.enviar = async () => {
+        if (sending) return;
+        const input = document.getElementById('userInput');
+        const text = input.value.trim();
+        if (!text || !usuario) return;
 
-        function renderizar() {
-            const c = document.getElementById('messages'); c.innerHTML = "";
-            historico.forEach(m => addMsgDOM(m.content, m.role, false));
-        }
+        sending = true;
+        document.getElementById('sendBtn').disabled = true;
 
-        function digitarTexto(el, txt) {
-            let i = 0; el.textContent = "";
-            function tipo() {
-                if (i < txt.length) { el.textContent += txt.charAt(i); i++; document.getElementById("messages").scrollTop = 99999; setTimeout(tipo, 10); }
+        const empty = document.getElementById('empty');
+        if (empty) empty.remove();
+
+        if (!conversaAtivaId) conversaAtivaId = push(ref(db, `conversas/${usuario}`)).key;
+
+        input.value = ''; input.style.height = 'auto';
+        addMsgDOM(text, 'user', false);
+        historico.push({ role: "user", content: text });
+
+        const box = addMsgDOM("…", 'bot', true);
+
+        try {
+            const res = await fetch("/api/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ mensagens: historico.slice(-8) })
+            });
+            const data = await res.json();
+            if (data.answer) {
+                digitarTexto(box, data.answer);
+                historico.push({ role: "assistant", content: data.answer });
+                await set(ref(db, `conversas/${usuario}/${conversaAtivaId}`), historico);
+            } else {
+                box.textContent = "Sem resposta.";
             }
-            tipo();
+        } catch (e) {
+            box.textContent = "Erro ao contactar a API.";
         }
 
-        async function enviar() {
-            const input = document.getElementById('userInput');
-            const text = input.value.trim();
-            if (!text || !usuario) return;
-            if (!conversaAtivaId) conversaAtivaId = push(ref(db, `conversas/${usuario}`)).key;
-            input.value = '';
-            addMsgDOM(text, 'user', false);
-            historico.push({ role: "user", content: text });
-            const box = addMsgDOM("...", 'ai', true);
-            try {
-                const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mensagens: historico.slice(-6) }) });
-                const data = await res.json();
-                if (data.answer) { digitarTexto(box, data.answer); historico.push({ role: "assistant", content: data.answer }); await set(ref(db, `conversas/${usuario}/${conversaAtivaId}`), historico); }
-            } catch (e) { box.textContent = "Erro na API."; }
-        }
+        sending = false;
+        document.getElementById('sendBtn').disabled = false;
+        input.focus();
+    };
 
-        function addMsgDOM(txt, role, typing) {
-            const c = document.getElementById('messages');
-            const d = document.createElement('div');
-            d.className = "msg-row";
-            d.innerHTML = `<div class="msg-label">${role === 'user' ? 'Você' : 'ClassBot'}</div><div class="msg-content">${typing ? "..." : txt}</div>`;
-            c.appendChild(d); c.scrollTop = 99999;
-            return d.querySelector('.msg-content');
-        }
+    function addMsgDOM(txt, role, loading) {
+        const c = document.getElementById('messages');
+        const d = document.createElement('div');
+        d.className = 'msg-row';
+        const label = document.createElement('div');
+        label.className = `msg-label ${role === 'bot' ? 'bot' : ''}`;
+        label.textContent = role === 'user' ? 'Você' : 'Prisma';
+        const content = document.createElement('div');
+        content.className = `msg-content ${role === 'user' ? 'user-bubble' : ''}`;
+        content.textContent = loading ? '…' : txt;
+        d.appendChild(label); d.appendChild(content);
+        c.appendChild(d); scrollBottom();
+        return content;
+    }
 
-        document.getElementById('sendBtn').onclick = enviar;
-        document.getElementById('userInput').onkeypress = (e) => { if(e.key === 'Enter') enviar(); };
-    </script>
+    function scrollBottom() {
+        const w = document.getElementById('messages-wrap');
+        w.scrollTop = w.scrollHeight;
+    }
+</script>
 </body>
 </html>
