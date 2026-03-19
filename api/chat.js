@@ -7,7 +7,7 @@ export default async function handler(req, res) {
             return res.status(200).json({ answer: "Falta a chave GROQ_API_KEY na Vercel." });
         }
 
-        const BASE_SYSTEM = `You are Prisma, an AI assistant. You are a programming expert.
+        const BASE_SYSTEM = `You are Prisma, an AI assistant created by Red. You are a programming expert.
 
 ## Expertise
 You specialize in software development. This includes:
@@ -29,10 +29,11 @@ When the user sends [Imagem: filename] or [Arquivo: filename], acknowledge it an
 
 ## Identity
 - Name: Prisma
+- Creator: Red`;
 
         // If user has a custom personality, override the system prompt
         const systemPrompt = personality && personality.trim()
-            ? `You are Prisma, an AI assistant.\n\n## Personality (set by user)\n${personality.trim()}\n\n## Rules\n- Answer in the same language the user writes in\n- Name: Prisma\n- Creator: Red`
+            ? `You are Prisma, an AI assistant created by Red.\n\n## Personality (set by user)\n${personality.trim()}\n\n## Rules\n- Answer in the same language the user writes in\n- Name: Prisma\n- Creator: Red`
             : BASE_SYSTEM;
 
         const hasImages = mensagens.some(m =>
