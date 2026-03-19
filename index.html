@@ -739,20 +739,41 @@
     }
 
     function digitarTexto(el, txt) {
-        let i = 0;
-        el.textContent = '';
-        el.classList.add('typing-cursor');
+        // Parse markdown first, then reveal word by word
+        el.innerHTML = marked.parse(txt);
+        el.style.opacity = '0';
+
+        // Collect all text nodes inside the rendered HTML
+        const allNodes = [];
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+        let node;
+        while ((node = walker.nextNode())) {
+            if (node.textContent.trim()) allNodes.push(node);
+        }
+
+        if (allNodes.length === 0) { el.style.opacity = '1'; return; }
+
+        // Hide all text content, reveal word by word
+        const originals = allNodes.map(n => n.textContent);
+        allNodes.forEach(n => n.textContent = '');
+        el.style.opacity = '1';
+
+        let nodeIdx = 0;
+        let charIdx = 0;
+
         const tick = () => {
-            if (i < txt.length) {
-                el.textContent += txt.slice(i, i + 3);
-                i += 3;
-                scrollBottom();
-                setTimeout(tick, 10);
-            } else {
-                el.classList.remove('typing-cursor');
-                el.innerHTML = marked.parse(txt);
-                scrollBottom();
+            if (nodeIdx >= allNodes.length) { scrollBottom(); return; }
+            const node = allNodes[nodeIdx];
+            const full = originals[nodeIdx];
+            const charsPerTick = 2;
+            charIdx += charsPerTick;
+            node.textContent = full.slice(0, charIdx);
+            if (charIdx >= full.length) {
+                nodeIdx++;
+                charIdx = 0;
             }
+            scrollBottom();
+            setTimeout(tick, 18);
         };
         tick();
     }
