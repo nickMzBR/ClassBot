@@ -797,10 +797,22 @@
     window.entrar = async () => {
         const u = document.getElementById('userLogin').value.trim().toLowerCase();
         const p = document.getElementById('passLogin').value.trim();
-        const snap = await get(ref(db, `usuarios/${u}`));
-        if (snap.exists() && snap.val().senha === p) {
-            localStorage.setItem("cb_user", u); location.reload();
-        } else alert("Usuário ou senha inválidos.");
+        if (!u || !p) return alert("Preenche os dois campos.");
+        const btnLogin = document.querySelector('.btn-primary');
+        btnLogin.textContent = 'Entrando...'; btnLogin.disabled = true;
+        try {
+            const snap = await get(ref(db, `usuarios/${u}`));
+            if (!snap.exists()) {
+                alert("Utilizador não encontrado: " + u);
+            } else if (snap.val().senha !== p) {
+                alert("Senha incorreta.");
+            } else {
+                localStorage.setItem("cb_user", u); location.reload();
+            }
+        } catch(e) {
+            alert("Erro de ligação ao Firebase: " + e.message);
+        }
+        btnLogin.textContent = 'Entrar'; btnLogin.disabled = false;
     };
     window.cadastrar = async () => {
         const u = document.getElementById('userLogin').value.trim().toLowerCase();
