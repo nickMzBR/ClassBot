@@ -6,12 +6,15 @@
     <title>Prisma</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- marked.js for markdown -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
     <style>
         :root {
             --bg: #1a1a1a; --sidebar: #111; --surface: #222;
             --surface2: #2a2a2a; --border: #333;
             --blue: #3b82f6; --blue-hover: #2563eb; --blue-dim: rgba(59,130,246,0.12);
             --text: #efefef; --muted: #666; --danger: #ef4444;
+            --code-bg: #161616; --code-border: #2e2e2e;
         }
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body, html {
@@ -22,113 +25,292 @@
         ::-webkit-scrollbar { width: 3px; }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-        /* LOGIN */
-        #login-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; align-items: center; justify-content: center; }
-        .auth-card { width: 90%; max-width: 320px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 32px 28px; }
-        .auth-logo { width: 40px; height: 40px; border-radius: 10px; background: var(--blue); display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-weight: 500; font-size: 16px; color: #fff; margin: 0 auto 18px; }
-        .auth-card h2 { text-align: center; font-size: 17px; font-weight: 600; margin-bottom: 4px; }
-        .auth-card p { text-align: center; color: var(--muted); font-size: 12px; margin-bottom: 22px; }
-        .auth-input { width: 100%; padding: 10px 13px; margin-bottom: 9px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; outline: none; transition: border-color .2s; }
-        .auth-input:focus { border-color: var(--blue); }
+        /* ── ANIMATIONS ── */
+        @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+        @keyframes slideUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes slideInLeft { from{opacity:0;transform:translateX(-16px)} to{opacity:1;transform:translateX(0)} }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+        @keyframes spin { to{transform:rotate(360deg)} }
+        @keyframes popIn { 0%{transform:scale(.85);opacity:0} 60%{transform:scale(1.04)} 100%{transform:scale(1);opacity:1} }
+
+        /* ── LOGIN ── */
+        #login-overlay {
+            position: fixed; inset: 0; background: var(--bg);
+            z-index: 2000; display: flex; align-items: center; justify-content: center;
+            animation: fadeIn .3s ease;
+        }
+        .auth-card {
+            width: 90%; max-width: 320px; background: var(--surface);
+            border: 1px solid var(--border); border-radius: 16px; padding: 36px 28px;
+            animation: slideUp .4s ease;
+        }
+        .auth-logo {
+            width: 44px; height: 44px; border-radius: 12px; background: var(--blue);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'IBM Plex Mono', monospace; font-weight: 500; font-size: 18px;
+            color: #fff; margin: 0 auto 20px;
+            box-shadow: 0 0 0 0 rgba(59,130,246,0.4);
+            animation: popIn .5s ease .1s both;
+        }
+        .auth-card h2 { text-align: center; font-size: 18px; font-weight: 600; margin-bottom: 5px; }
+        .auth-card p { text-align: center; color: var(--muted); font-size: 12px; margin-bottom: 24px; }
+        .auth-input {
+            width: 100%; padding: 10px 13px; margin-bottom: 9px;
+            border-radius: 9px; border: 1px solid var(--border);
+            background: var(--surface2); color: var(--text);
+            font-family: 'Inter', sans-serif; font-size: 14px;
+            outline: none; transition: border-color .2s, box-shadow .2s;
+        }
+        .auth-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-dim); }
         .auth-input::placeholder { color: var(--muted); }
-        .btn-primary { width: 100%; padding: 10px; border-radius: 8px; background: var(--blue); border: none; color: #fff; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14px; cursor: pointer; transition: background .15s; margin-top: 2px; }
+        .btn-primary {
+            width: 100%; padding: 11px; border-radius: 9px; background: var(--blue);
+            border: none; color: #fff; font-family: 'Inter', sans-serif;
+            font-weight: 600; font-size: 14px; cursor: pointer;
+            transition: background .15s, transform .1s; margin-top: 2px;
+        }
         .btn-primary:hover { background: var(--blue-hover); }
-        .auth-link { display: block; text-align: center; margin-top: 13px; color: var(--muted); font-size: 12px; cursor: pointer; background: none; border: none; font-family: 'Inter', sans-serif; }
+        .btn-primary:active { transform: scale(.98); }
+        .auth-link {
+            display: block; text-align: center; margin-top: 14px;
+            color: var(--muted); font-size: 12px; cursor: pointer;
+            background: none; border: none; font-family: 'Inter', sans-serif;
+            transition: color .15s;
+        }
         .auth-link:hover { color: var(--text); }
 
-        /* SIDEBAR */
-        #sidebar { width: 255px; background: var(--sidebar); display: flex; flex-direction: column; border-right: 1px solid var(--border); transition: transform .25s ease; z-index: 1000; }
-        .sidebar-top { padding: 16px 14px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 9px; }
-        .s-logo { width: 27px; height: 27px; border-radius: 7px; background: var(--blue); display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #fff; flex-shrink: 0; }
+        /* ── SIDEBAR ── */
+        #sidebar {
+            width: 255px; background: var(--sidebar);
+            display: flex; flex-direction: column;
+            border-right: 1px solid var(--border);
+            transition: transform .25s cubic-bezier(.4,0,.2,1); z-index: 1000;
+        }
+        .sidebar-top {
+            padding: 16px 14px 12px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 9px;
+        }
+        .s-logo {
+            width: 27px; height: 27px; border-radius: 7px; background: var(--blue);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #fff; flex-shrink: 0;
+        }
         .s-title { font-weight: 600; font-size: 14px; }
-        .btn-new { margin: 10px 12px; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; color: var(--text); background: transparent; display: flex; align-items: center; gap: 7px; transition: background .15s, border-color .15s; }
+        .btn-new {
+            margin: 10px 12px; padding: 9px 12px; border: 1px solid var(--border);
+            border-radius: 8px; cursor: pointer; font-family: 'Inter', sans-serif;
+            font-size: 13px; font-weight: 500; color: var(--text); background: transparent;
+            display: flex; align-items: center; gap: 7px;
+            transition: background .15s, border-color .15s;
+        }
         .btn-new:hover { background: var(--surface); border-color: #444; }
         #chat-list { flex: 1; overflow-y: auto; padding: 4px 8px; }
-        .chat-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; margin-bottom: 2px; border-radius: 7px; cursor: pointer; color: var(--muted); transition: background .15s, color .15s; gap: 8px; }
+        .chat-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px 10px; margin-bottom: 2px; border-radius: 7px;
+            cursor: pointer; color: var(--muted);
+            transition: background .15s, color .15s; gap: 8px;
+            animation: slideInLeft .2s ease both;
+        }
         .chat-item:hover { background: var(--surface); color: var(--text); }
         .chat-item.active { background: var(--surface2); color: var(--text); }
         .chat-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; font-size: 13px; }
-        .chat-del { opacity: 0; font-size: 13px; flex-shrink: 0; transition: opacity .15s; color: var(--muted); background: none; border: none; cursor: pointer; }
+        .chat-del {
+            opacity: 0; font-size: 12px; flex-shrink: 0;
+            transition: opacity .15s; color: var(--muted); background: none; border: none; cursor: pointer;
+        }
         .chat-item:hover .chat-del { opacity: 1; }
         .chat-del:hover { color: var(--danger); }
-        .user-footer { padding: 12px 14px; padding-bottom: calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .user-footer {
+            padding: 12px 14px; padding-bottom: calc(12px + env(safe-area-inset-bottom));
+            border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+        }
         .user-name { font-size: 13px; font-weight: 500; }
-        .btn-logout { padding: 5px 9px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; background: transparent; color: var(--muted); border: 1px solid var(--border); transition: all .15s; white-space: nowrap; }
+        .btn-logout {
+            padding: 5px 9px; border-radius: 6px; font-size: 11px; font-weight: 600;
+            cursor: pointer; font-family: 'Inter', sans-serif;
+            background: transparent; color: var(--muted); border: 1px solid var(--border);
+            transition: all .15s; white-space: nowrap;
+        }
         .btn-logout:hover { border-color: var(--danger); color: var(--danger); }
 
-        /* MAIN */
+        /* ── MAIN ── */
         #main { flex: 1; display: flex; flex-direction: column; height: 100dvh; min-width: 0; }
-        header { padding: 13px 20px; padding-top: calc(13px + env(safe-area-inset-top)); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; background: var(--bg); flex-shrink: 0; }
-        .menu-toggle { display: none; cursor: pointer; background: none; border: none; color: var(--muted); padding: 4px; border-radius: 5px; font-size: 18px; line-height: 1; }
+        header {
+            padding: 13px 20px; padding-top: calc(13px + env(safe-area-inset-top));
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 12px;
+            background: var(--bg); flex-shrink: 0;
+        }
+        .menu-toggle {
+            display: none; cursor: pointer; background: none; border: none;
+            color: var(--muted); padding: 4px; border-radius: 5px; font-size: 18px; line-height: 1;
+            transition: color .15s;
+        }
         .menu-toggle:hover { color: var(--text); }
         .header-title { font-weight: 600; font-size: 15px; }
         .header-sub { font-size: 11px; color: var(--muted); margin-left: auto; font-family: 'IBM Plex Mono', monospace; }
 
-        /* MESSAGES */
+        /* ── MESSAGES ── */
         #messages-wrap { flex: 1; overflow-y: auto; }
-        #messages { padding: 24px 20px; width: 100%; max-width: 740px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; min-height: 100%; }
-        .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: var(--muted); gap: 10px; }
-        .empty-icon { width: 46px; height: 46px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 19px; color: var(--blue); margin-bottom: 4px; }
-        .empty-state h3 { font-size: 15px; font-weight: 600; color: var(--text); }
+        #messages {
+            padding: 24px 20px; width: 100%; max-width: 740px; margin: 0 auto;
+            display: flex; flex-direction: column; gap: 24px; min-height: 100%;
+        }
+        .empty-state {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            text-align: center; color: var(--muted); gap: 10px;
+            animation: fadeIn .4s ease;
+        }
+        .empty-icon {
+            width: 50px; height: 50px; border-radius: 14px;
+            background: var(--surface); border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'IBM Plex Mono', monospace; font-size: 20px;
+            color: var(--blue); margin-bottom: 6px;
+            animation: popIn .5s ease both;
+        }
+        .empty-state h3 { font-size: 16px; font-weight: 600; color: var(--text); }
         .empty-state p { font-size: 13px; max-width: 240px; line-height: 1.6; }
-        .msg-row { display: flex; flex-direction: column; gap: 5px; }
+
+        /* ── MESSAGE ROWS ── */
+        .msg-row { display: flex; flex-direction: column; gap: 6px; animation: slideUp .22s ease both; }
+        .msg-header { display: flex; align-items: center; justify-content: space-between; }
         .msg-label { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
         .msg-label.bot { color: var(--blue); }
-        .msg-content { font-size: 14px; line-height: 1.75; white-space: pre-wrap; word-break: break-word; }
-        .msg-content.user-bubble { display: inline-block; max-width: 82%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 9px 13px; }
+        .copy-btn {
+            opacity: 0; padding: 3px 8px; border-radius: 5px; font-size: 11px;
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--muted); cursor: pointer; font-family: 'Inter', sans-serif;
+            transition: opacity .15s, color .15s; display: flex; align-items: center; gap: 4px;
+        }
+        .msg-row:hover .copy-btn { opacity: 1; }
+        .copy-btn:hover { color: var(--text); }
+        .copy-btn.copied { color: #4ade80; border-color: #4ade8044; }
 
-        /* ANEXOS */
-        .attachment-preview {
-            display: flex; flex-wrap: wrap; gap: 8px;
-            padding: 8px 0 2px;
+        /* ── MARKDOWN ── */
+        .msg-content { font-size: 14px; line-height: 1.75; word-break: break-word; }
+        .msg-content.user-bubble {
+            display: inline-block; max-width: 82%;
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 10px; padding: 9px 13px;
         }
-        .att-item {
-            position: relative; border-radius: 8px; overflow: hidden;
-            border: 1px solid var(--border); background: var(--surface2);
+        .msg-content p { margin-bottom: 10px; }
+        .msg-content p:last-child { margin-bottom: 0; }
+        .msg-content ul, .msg-content ol { padding-left: 20px; margin-bottom: 10px; }
+        .msg-content li { margin-bottom: 4px; line-height: 1.6; }
+        .msg-content strong { font-weight: 600; color: #fff; }
+        .msg-content em { font-style: italic; color: #ccc; }
+        .msg-content h1, .msg-content h2, .msg-content h3 {
+            font-weight: 600; margin-bottom: 8px; margin-top: 4px; color: #fff;
         }
-        .att-item img { width: 80px; height: 80px; object-fit: cover; display: block; }
-        .att-item .att-file {
-            display: flex; align-items: center; gap: 6px;
-            padding: 8px 10px; font-size: 12px; color: var(--text);
-            max-width: 180px;
+        .msg-content h1 { font-size: 17px; }
+        .msg-content h2 { font-size: 15px; }
+        .msg-content h3 { font-size: 14px; }
+        .msg-content blockquote {
+            border-left: 3px solid var(--blue); padding-left: 12px;
+            color: var(--muted); margin: 8px 0;
         }
-        .att-item .att-file svg { flex-shrink: 0; color: var(--blue); }
-        .att-item .att-file span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .att-remove {
-            position: absolute; top: 3px; right: 3px;
-            width: 18px; height: 18px; border-radius: 50%;
-            background: rgba(0,0,0,.7); border: none; color: #fff;
-            font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        /* Inline code */
+        .msg-content code {
+            font-family: 'IBM Plex Mono', monospace; font-size: 12.5px;
+            background: var(--code-bg); border: 1px solid var(--code-border);
+            border-radius: 4px; padding: 1px 5px; color: #e2c5ff;
         }
-        /* Imagens enviadas na conversa */
-        .msg-img { max-width: 260px; max-height: 260px; border-radius: 9px; border: 1px solid var(--border); display: block; cursor: pointer; margin-top: 4px; }
+        /* Code blocks */
+        .code-block {
+            margin: 10px 0; border-radius: 10px; overflow: hidden;
+            border: 1px solid var(--code-border); background: var(--code-bg);
+        }
+        .code-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 7px 12px; background: #1e1e1e; border-bottom: 1px solid var(--code-border);
+        }
+        .code-lang { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); }
+        .code-copy {
+            font-size: 11px; padding: 3px 8px; border-radius: 5px;
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--muted); cursor: pointer; font-family: 'Inter', sans-serif;
+            transition: color .15s;
+        }
+        .code-copy:hover { color: var(--text); }
+        .code-copy.copied { color: #4ade80; }
+        .msg-content pre {
+            margin: 0; padding: 14px;
+            overflow-x: auto; font-family: 'IBM Plex Mono', monospace;
+            font-size: 12.5px; line-height: 1.6; color: #d4d4d4;
+        }
+        .msg-content pre code {
+            background: none; border: none; padding: 0; color: inherit; font-size: inherit;
+        }
+        /* Tables */
+        .msg-content table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 13px; }
+        .msg-content th, .msg-content td { padding: 7px 12px; border: 1px solid var(--border); text-align: left; }
+        .msg-content th { background: var(--surface2); font-weight: 600; }
+
+        /* Typing dots */
+        .typing-dots { display: flex; gap: 5px; align-items: center; padding: 4px 0; }
+        .typing-dots span {
+            width: 6px; height: 6px; border-radius: 50%; background: var(--blue);
+            animation: pulse 1.2s ease-in-out infinite;
+        }
+        .typing-dots span:nth-child(2) { animation-delay: .2s; }
+        .typing-dots span:nth-child(3) { animation-delay: .4s; }
+
+        /* Images & files in chat */
+        .msg-img { max-width: 260px; max-height: 260px; border-radius: 9px; border: 1px solid var(--border); display: block; cursor: pointer; margin-top: 4px; transition: opacity .15s; }
+        .msg-img:hover { opacity: .85; }
         .msg-file { display: inline-flex; align-items: center; gap: 7px; padding: 8px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; font-size: 13px; margin-top: 4px; }
         .msg-file svg { color: var(--blue); flex-shrink: 0; }
 
-        /* INPUT */
-        #input-area { padding: 10px 20px; padding-bottom: calc(10px + env(safe-area-inset-bottom)); width: 100%; max-width: 740px; margin: 0 auto; flex-shrink: 0; }
+        /* ── INPUT ── */
+        #input-area {
+            padding: 10px 20px; padding-bottom: calc(10px + env(safe-area-inset-bottom));
+            width: 100%; max-width: 740px; margin: 0 auto; flex-shrink: 0;
+        }
         #attach-preview { display: none; flex-wrap: wrap; gap: 7px; margin-bottom: 8px; }
         #attach-preview.has-files { display: flex; }
-        .input-box { display: flex; background: var(--surface2); border-radius: 11px; border: 1px solid var(--border); align-items: flex-end; padding: 7px 7px 7px 13px; gap: 6px; transition: border-color .2s, box-shadow .2s; }
+        .att-item { position: relative; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); background: var(--surface2); animation: popIn .2s ease; }
+        .att-item img { width: 72px; height: 72px; object-fit: cover; display: block; }
+        .att-item .att-file { display: flex; align-items: center; gap: 6px; padding: 8px 10px; font-size: 12px; color: var(--text); max-width: 180px; }
+        .att-item .att-file svg { flex-shrink: 0; color: var(--blue); }
+        .att-item .att-file span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .att-remove { position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 50%; background: rgba(0,0,0,.75); border: none; color: #fff; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .input-box {
+            display: flex; background: var(--surface2); border-radius: 12px;
+            border: 1px solid var(--border); align-items: flex-end;
+            padding: 7px 7px 7px 13px; gap: 6px;
+            transition: border-color .2s, box-shadow .2s;
+        }
         .input-box:focus-within { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-dim); }
-        #userInput { flex: 1; background: transparent; border: none; color: var(--text); outline: none; font-family: 'Inter', sans-serif; font-size: 14px; line-height: 1.5; resize: none; min-height: 22px; max-height: 110px; overflow-y: auto; padding: 4px 0; }
+        #userInput {
+            flex: 1; background: transparent; border: none; color: var(--text);
+            outline: none; font-family: 'Inter', sans-serif; font-size: 14px;
+            line-height: 1.5; resize: none; min-height: 22px; max-height: 110px; overflow-y: auto; padding: 4px 0;
+        }
         #userInput::placeholder { color: var(--muted); }
         #fileInput { display: none; }
-        .icon-btn { width: 32px; height: 32px; border-radius: 7px; flex-shrink: 0; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s, transform .1s; background: var(--surface); color: var(--muted); }
+        .icon-btn {
+            width: 32px; height: 32px; border-radius: 7px; flex-shrink: 0; border: none;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: background .15s, transform .12s; background: var(--surface); color: var(--muted);
+        }
         .icon-btn:hover { background: var(--border); color: var(--text); }
-        .icon-btn:active { transform: scale(.93); }
+        .icon-btn:active { transform: scale(.92); }
         .icon-btn svg { width: 15px; height: 15px; }
         #sendBtn { background: var(--blue); color: white; }
         #sendBtn:hover { background: var(--blue-hover); color: white; }
-        #sendBtn:disabled, #attachBtn:disabled { opacity: .35; cursor: not-allowed; transform: none; }
-        .hint { text-align: center; font-size: 10.5px; color: var(--muted); margin-top: 8px; opacity: .5; }
+        #sendBtn:disabled, #attachBtn:disabled { opacity: .3; cursor: not-allowed; transform: none; }
+        .hint { text-align: center; font-size: 10.5px; color: var(--muted); margin-top: 8px; opacity: .45; }
 
-        /* MODAL */
-        #img-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.88); z-index: 3000; align-items: center; justify-content: center; cursor: zoom-out; }
+        /* ── MODAL ── */
+        #img-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.9); z-index: 3000; align-items: center; justify-content: center; cursor: zoom-out; animation: fadeIn .15s ease; }
         #img-modal.show { display: flex; }
-        #img-modal img { max-width: 92vw; max-height: 90vh; border-radius: 10px; }
+        #img-modal img { max-width: 92vw; max-height: 90vh; border-radius: 10px; animation: popIn .2s ease; }
 
-        /* MOBILE */
+        /* ── MOBILE ── */
         #mob-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 900; }
         @media (max-width: 768px) {
             #sidebar { position: fixed; height: 100dvh; left: 0; transform: translateX(-100%); width: 255px; }
@@ -181,7 +363,7 @@
             <div class="empty-state" id="empty">
                 <div class="empty-icon">P</div>
                 <h3>Como posso ajudar?</h3>
-                <p>Especialista em programação. Envia texto, imagens ou arquivos.</p>
+                <p>Especialista em programação. Envia texto, imagens ou ficheiros de código.</p>
             </div>
         </div>
     </div>
@@ -190,8 +372,10 @@
         <div class="input-box">
             <textarea id="userInput" placeholder="Escreve uma mensagem..." rows="1"
                 oninput="resizeInput(this)" onkeydown="keyHandler(event)"></textarea>
-            <input type="file" id="fileInput" multiple accept="image/*,.pdf,.txt,.js,.ts,.py,.html,.css,.json,.md,.csv" onchange="onFileSelect(event)">
-            <button class="icon-btn" id="attachBtn" onclick="document.getElementById('fileInput').click()" title="Anexar arquivo">
+            <input type="file" id="fileInput" multiple
+                accept="image/*,.pdf,.txt,.js,.ts,.jsx,.tsx,.py,.html,.css,.json,.md,.csv,.java,.c,.cpp,.go,.rs,.php,.rb,.swift,.kt"
+                onchange="onFileSelect(event)">
+            <button class="icon-btn" id="attachBtn" onclick="document.getElementById('fileInput').click()" title="Anexar">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66L9.41 17a2 2 0 01-2.83-2.83l8.49-8.48"/>
                 </svg>
@@ -222,13 +406,48 @@
         appId: "1:117494419469:web:ca12637334e9a7d8090544"
     };
 
+    // Configure marked
+    marked.setOptions({
+        breaks: true,
+        gfm: true,
+        renderer: (() => {
+            const r = new marked.Renderer();
+            r.code = (code, lang) => {
+                const language = lang || 'code';
+                const id = 'cb_' + Math.random().toString(36).slice(2,8);
+                return `<div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">${language}</span>
+                        <button class="code-copy" onclick="copyCode('${id}')">Copiar</button>
+                    </div>
+                    <pre id="${id}"><code>${escapeHtml(typeof code === 'object' ? code.text || '' : code)}</code></pre>
+                </div>`;
+            };
+            return r;
+        })()
+    });
+
+    function escapeHtml(str) {
+        return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    window.copyCode = (id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        navigator.clipboard.writeText(el.textContent).then(() => {
+            const btn = el.closest('.code-block').querySelector('.code-copy');
+            btn.textContent = 'Copiado!'; btn.classList.add('copied');
+            setTimeout(() => { btn.textContent = 'Copiar'; btn.classList.remove('copied'); }, 2000);
+        });
+    };
+
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     let usuario = localStorage.getItem("cb_user") || null;
     let conversaAtivaId = null;
     let historico = [];
     let sending = false;
-    let pendingFiles = []; // { name, type, dataUrl }
+    let pendingFiles = [];
 
     if (usuario) {
         document.getElementById('login-overlay').style.display = 'none';
@@ -240,83 +459,82 @@
         document.getElementById('sidebar').classList.toggle('open');
         document.getElementById('mob-overlay').classList.toggle('show');
     };
-
     window.resizeInput = (el) => {
         el.style.height = 'auto';
         el.style.height = Math.min(el.scrollHeight, 110) + 'px';
     };
-
     window.keyHandler = (e) => {
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar(); }
     };
-
     window.entrar = async () => {
         const u = document.getElementById('userLogin').value.trim().toLowerCase();
         const p = document.getElementById('passLogin').value.trim();
         const snap = await get(ref(db, `usuarios/${u}`));
         if (snap.exists() && snap.val().senha === p) {
-            localStorage.setItem("cb_user", u);
-            location.reload();
+            localStorage.setItem("cb_user", u); location.reload();
         } else alert("Usuário ou senha inválidos.");
     };
-
     window.cadastrar = async () => {
         const u = document.getElementById('userLogin').value.trim().toLowerCase();
         const p = document.getElementById('passLogin').value.trim();
         if (!u || p.length < 3) return alert("Dados muito curtos!");
         await set(ref(db, `usuarios/${u}`), { senha: p });
-        alert("Conta criada! Podes entrar agora.");
+        alert("Conta criada!");
     };
-
     window.sair = () => { localStorage.clear(); location.reload(); };
 
-    // ── FICHEIROS ──
+    // ── FILE HANDLING ──
+    const TEXT_EXTS = ['.txt','.js','.ts','.jsx','.tsx','.py','.html','.css','.json','.md','.csv','.java','.c','.cpp','.go','.rs','.php','.rb','.swift','.kt'];
+
     window.onFileSelect = (e) => {
-        const files = Array.from(e.target.files);
-        files.forEach(file => {
+        Array.from(e.target.files).forEach(file => {
+            const ext = '.' + file.name.split('.').pop().toLowerCase();
+            const isText = TEXT_EXTS.includes(ext);
+            const isImage = file.type.startsWith('image/');
             const reader = new FileReader();
-            reader.onload = (ev) => {
-                pendingFiles.push({ name: file.name, type: file.type, dataUrl: ev.target.result });
-                renderAttachPreview();
-            };
-            reader.readAsDataURL(file);
+            if (isImage) {
+                reader.onload = ev => { pendingFiles.push({ name: file.name, type: file.type, dataUrl: ev.target.result, kind: 'image' }); renderAttachPreview(); };
+                reader.readAsDataURL(file);
+            } else if (isText) {
+                reader.onload = ev => { pendingFiles.push({ name: file.name, type: file.type, content: ev.target.result, kind: 'text' }); renderAttachPreview(); };
+                reader.readAsText(file);
+            } else {
+                reader.onload = ev => { pendingFiles.push({ name: file.name, type: file.type, dataUrl: ev.target.result, kind: 'binary' }); renderAttachPreview(); };
+                reader.readAsDataURL(file);
+            }
         });
-        e.target.value = ''; // reset input
+        e.target.value = '';
     };
 
     function renderAttachPreview() {
         const box = document.getElementById('attach-preview');
         box.innerHTML = '';
-        if (pendingFiles.length === 0) { box.classList.remove('has-files'); return; }
+        if (!pendingFiles.length) { box.classList.remove('has-files'); return; }
         box.classList.add('has-files');
         pendingFiles.forEach((f, i) => {
             const item = document.createElement('div');
             item.className = 'att-item';
-            if (f.type.startsWith('image/')) {
+            if (f.kind === 'image') {
                 item.innerHTML = `<img src="${f.dataUrl}" style="width:72px;height:72px;object-fit:cover;display:block;">`;
             } else {
-                item.innerHTML = `<div class="att-file">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                    <span>${f.name}</span></div>`;
+                item.innerHTML = `<div class="att-file"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>${f.name}</span></div>`;
             }
             const rm = document.createElement('button');
-            rm.className = 'att-remove';
-            rm.textContent = '✕';
-            rm.onclick = () => { pendingFiles.splice(i, 1); renderAttachPreview(); };
-            item.appendChild(rm);
-            box.appendChild(item);
+            rm.className = 'att-remove'; rm.textContent = '✕';
+            rm.onclick = () => { pendingFiles.splice(i,1); renderAttachPreview(); };
+            item.appendChild(rm); box.appendChild(item);
         });
     }
 
-    // ── CONVERSAS ──
+    // ── CONVERSATIONS ──
     function escutarConversas() {
-        onValue(ref(db, `conversas/${usuario}`), (snapshot) => {
+        onValue(ref(db, `conversas/${usuario}`), (snap) => {
             const list = document.getElementById('chat-list');
-            list.innerHTML = "";
-            const data = snapshot.val();
+            list.innerHTML = '';
+            const data = snap.val();
             if (data) Object.keys(data).reverse().forEach(id => {
-                const msgs = data[id];
-                const label = msgs[0]?.text?.slice(0, 40) || msgs[0]?.content?.slice(0, 40) || "Conversa";
+                const conv = data[id];
+                const label = conv.title || conv.msgs?.[0]?.text?.slice(0,40) || 'Conversa';
                 const item = document.createElement('div');
                 item.className = `chat-item ${id === conversaAtivaId ? 'active' : ''}`;
                 item.innerHTML = `<span class="chat-name" onclick="abrirConversa('${id}')">${label}</span>
@@ -337,7 +555,11 @@
     window.abrirConversa = async (id) => {
         conversaAtivaId = id;
         const snap = await get(ref(db, `conversas/${usuario}/${id}`));
-        if (snap.exists()) { historico = snap.val(); renderizar(); }
+        if (snap.exists()) {
+            const data = snap.val();
+            historico = data.msgs || [];
+            renderizar();
+        }
         if (window.innerWidth <= 768) toggleMenu();
     };
 
@@ -351,8 +573,22 @@
     function emptyState() {
         const d = document.createElement('div');
         d.className = 'empty-state'; d.id = 'empty';
-        d.innerHTML = `<div class="empty-icon">P</div><h3>Como posso ajudar?</h3><p>Especialista em programação. Envia texto, imagens ou arquivos.</p>`;
+        d.innerHTML = `<div class="empty-icon">P</div><h3>Como posso ajudar?</h3><p>Especialista em programação. Envia texto, imagens ou ficheiros de código.</p>`;
         return d;
+    }
+
+    async function gerarTitulo(primeiraMsg) {
+        try {
+            const res = await fetch("/api/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    mensagens: [{ role: "user", content: `Resume esta mensagem em no máximo 5 palavras para usar como título de conversa. Responde APENAS com o título, sem pontuação final:\n\n${primeiraMsg}` }]
+                })
+            });
+            const data = await res.json();
+            return data.answer?.slice(0, 50) || primeiraMsg.slice(0, 40);
+        } catch { return primeiraMsg.slice(0, 40); }
     }
 
     function renderizar() {
@@ -364,27 +600,16 @@
 
     function renderMsgFromHistory(m) {
         const role = m.role === 'user' ? 'user' : 'bot';
-        if (m.files && m.files.length > 0) {
-            // Render attachments
+        if (m.files?.length) {
             m.files.forEach(f => {
-                if (f.type.startsWith('image/')) {
-                    addImageMsgDOM(f.dataUrl, f.name, role);
-                } else {
-                    addFileMsgDOM(f.name, role);
-                }
+                if (f.kind === 'image') addImageMsgDOM(f.dataUrl, f.name, role);
+                else addFileMsgDOM(f.name, role);
             });
         }
         if (m.text) addMsgDOM(m.text, role, false);
     }
 
-    function digitarTexto(el, txt) {
-        let i = 0; el.textContent = "";
-        const tick = () => {
-            if (i < txt.length) { el.textContent += txt.charAt(i++); scrollBottom(); setTimeout(tick, 8); }
-        };
-        tick();
-    }
-
+    // ── SEND ──
     window.enviar = async () => {
         if (sending) return;
         const input = document.getElementById('userInput');
@@ -397,69 +622,55 @@
         document.getElementById('sendBtn').disabled = true;
         document.getElementById('attachBtn').disabled = true;
 
-        const empty = document.getElementById('empty');
-        if (empty) empty.remove();
+        document.getElementById('empty')?.remove();
         if (!conversaAtivaId) conversaAtivaId = push(ref(db, `conversas/${usuario}`)).key;
 
         input.value = ''; input.style.height = 'auto';
 
-        // Mostrar ficheiros na UI
         const filesSnapshot = [...pendingFiles];
+        pendingFiles = []; renderAttachPreview();
+
+        // Show in UI
         filesSnapshot.forEach(f => {
-            if (f.type.startsWith('image/')) addImageMsgDOM(f.dataUrl, f.name, 'user');
+            if (f.kind === 'image') addImageMsgDOM(f.dataUrl, f.name, 'user');
             else addFileMsgDOM(f.name, 'user');
         });
-
-        // Mostrar texto do utilizador
         if (text) addMsgDOM(text, 'user', false);
 
-        // Construir mensagem para o histórico
-        const userMsg = { role: "user", text: text || null, files: filesSnapshot };
+        // Add to history
+        const userMsg = { role: "user", text: text || null, files: filesSnapshot.map(f => ({ name: f.name, kind: f.kind, dataUrl: f.dataUrl || null })) };
         historico.push(userMsg);
 
-        // Construir conteúdo para a API (texto + descrição de ficheiros)
-        let apiContent = text || '';
-        if (filesSnapshot.length > 0) {
-            const fileDescs = filesSnapshot.map(f => {
-                if (f.type.startsWith('image/')) return `[Imagem anexada: ${f.name}]`;
-                return `[Arquivo anexado: ${f.name}]`;
-            }).join('\n');
-            apiContent = fileDescs + (text ? '\n' + text : '');
-        }
-
-        // Limpar pending
-        pendingFiles = [];
-        renderAttachPreview();
-
-        const box = addMsgDOM("…", 'bot', true);
+        // Typing indicator
+        const typingRow = document.createElement('div');
+        typingRow.className = 'msg-row'; typingRow.id = 'typing';
+        typingRow.innerHTML = `<div class="msg-label bot">Prisma</div><div class="typing-dots"><span></span><span></span><span></span></div>`;
+        document.getElementById('messages').appendChild(typingRow); scrollBottom();
 
         try {
-            // Build messages for API — images sent as image_url for vision model
-            const mensagensAPI = historico
-                .filter(m => m.text || (m.files && m.files.length > 0))
-                .map(m => {
-                    const hasImgs = m.files?.some(f => f.type.startsWith('image/'));
-                    if (hasImgs) {
-                        // Multimodal content array
-                        const parts = [];
-                        m.files.forEach(f => {
-                            if (f.type.startsWith('image/')) {
-                                parts.push({ type: 'image_url', image_url: { url: f.dataUrl } });
-                            } else {
-                                parts.push({ type: 'text', text: `[Arquivo: ${f.name}]` });
-                            }
-                        });
-                        if (m.text) parts.push({ type: 'text', text: m.text });
-                        return { role: m.role, content: parts };
-                    } else {
-                        // Text only
-                        let txt = m.files?.map(f => `[Arquivo: ${f.name}]`).join('\n') || '';
-                        if (m.text) txt += (txt ? '\n' : '') + m.text;
-                        return { role: m.role, content: txt };
-                    }
-                })
-                .filter(m => m.content && (Array.isArray(m.content) ? m.content.length > 0 : m.content.trim()))
-                .slice(-8);
+            // Build API messages
+            const mensagensAPI = historico.map(m => {
+                const imgFiles = filesSnapshot.filter(f => f.kind === 'image');
+                if (m === userMsg && imgFiles.length > 0) {
+                    const parts = [];
+                    imgFiles.forEach(f => parts.push({ type: 'image_url', image_url: { url: f.dataUrl } }));
+                    // Include text file contents
+                    filesSnapshot.filter(f => f.kind === 'text').forEach(f => {
+                        parts.push({ type: 'text', text: `Conteúdo do ficheiro "${f.name}":\n\`\`\`\n${f.content}\n\`\`\`` });
+                    });
+                    if (text) parts.push({ type: 'text', text });
+                    return { role: 'user', content: parts };
+                }
+                let content = '';
+                if (m.files?.length) {
+                    m.files.forEach(f => {
+                        if (f.kind === 'text' && f.content) content += `Ficheiro "${f.name}":\n\`\`\`\n${f.content}\n\`\`\`\n`;
+                        else content += `[${f.kind === 'image' ? 'Imagem' : 'Ficheiro'}: ${f.name}]\n`;
+                    });
+                }
+                if (m.text) content += m.text;
+                return { role: m.role, content: content.trim() };
+            }).filter(m => m.content && (Array.isArray(m.content) ? m.content.length : m.content.trim())).slice(-8);
 
             const res = await fetch("/api/chat", {
                 method: "POST",
@@ -467,15 +678,26 @@
                 body: JSON.stringify({ mensagens: mensagensAPI })
             });
             const data = await res.json();
+            document.getElementById('typing')?.remove();
+
             if (data.answer) {
-                digitarTexto(box, data.answer);
+                addMsgDOM(data.answer, 'bot', false);
                 historico.push({ role: "assistant", text: data.answer });
-                await set(ref(db, `conversas/${usuario}/${conversaAtivaId}`), historico);
+
+                // Auto-title first message
+                const isFirst = historico.filter(m => m.role === 'user').length === 1;
+                const title = isFirst ? await gerarTitulo(text || filesSnapshot[0]?.name || 'Conversa') : null;
+
+                await set(ref(db, `conversas/${usuario}/${conversaAtivaId}`), {
+                    title: title || null,
+                    msgs: historico
+                });
             } else {
-                box.textContent = "Sem resposta.";
+                addMsgDOM("Sem resposta.", 'bot', false);
             }
         } catch (e) {
-            box.textContent = "Erro ao contactar a API.";
+            document.getElementById('typing')?.remove();
+            addMsgDOM("Erro ao contactar a API.", 'bot', false);
         }
 
         sending = false;
@@ -484,47 +706,77 @@
         input.focus();
     };
 
+    // ── DOM HELPERS ──
     function addMsgDOM(txt, role, loading) {
         const c = document.getElementById('messages');
         const d = document.createElement('div');
         d.className = 'msg-row';
+
+        const header = document.createElement('div');
+        header.className = 'msg-header';
+
         const label = document.createElement('div');
         label.className = `msg-label ${role === 'bot' ? 'bot' : ''}`;
         label.textContent = role === 'user' ? 'Você' : 'Prisma';
+        header.appendChild(label);
+
+        // Copy button for bot messages
+        if (role === 'bot' && !loading) {
+            const cpBtn = document.createElement('button');
+            cpBtn.className = 'copy-btn';
+            cpBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copiar`;
+            cpBtn.onclick = () => {
+                navigator.clipboard.writeText(txt).then(() => {
+                    cpBtn.textContent = '✓ Copiado'; cpBtn.classList.add('copied');
+                    setTimeout(() => { cpBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copiar`; cpBtn.classList.remove('copied'); }, 2000);
+                });
+            };
+            header.appendChild(cpBtn);
+        }
+
         const content = document.createElement('div');
         content.className = `msg-content ${role === 'user' ? 'user-bubble' : ''}`;
-        content.textContent = loading ? '…' : txt;
-        d.appendChild(label); d.appendChild(content);
+
+        if (loading) {
+            content.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+        } else if (role === 'bot') {
+            content.innerHTML = marked.parse(txt);
+        } else {
+            content.textContent = txt;
+        }
+
+        d.appendChild(header);
+        d.appendChild(content);
         c.appendChild(d); scrollBottom();
         return content;
     }
 
     function addImageMsgDOM(src, name, role) {
         const c = document.getElementById('messages');
-        const d = document.createElement('div');
-        d.className = 'msg-row';
+        const d = document.createElement('div'); d.className = 'msg-row';
+        const header = document.createElement('div'); header.className = 'msg-header';
         const label = document.createElement('div');
         label.className = `msg-label ${role === 'bot' ? 'bot' : ''}`;
         label.textContent = role === 'user' ? 'Você' : 'Prisma';
+        header.appendChild(label);
         const img = document.createElement('img');
-        img.className = 'msg-img';
-        img.src = src; img.alt = name;
+        img.className = 'msg-img'; img.src = src; img.alt = name;
         img.onclick = () => { document.getElementById('modal-img').src = src; document.getElementById('img-modal').classList.add('show'); };
-        d.appendChild(label); d.appendChild(img);
+        d.appendChild(header); d.appendChild(img);
         c.appendChild(d); scrollBottom();
     }
 
     function addFileMsgDOM(name, role) {
         const c = document.getElementById('messages');
-        const d = document.createElement('div');
-        d.className = 'msg-row';
+        const d = document.createElement('div'); d.className = 'msg-row';
+        const header = document.createElement('div'); header.className = 'msg-header';
         const label = document.createElement('div');
         label.className = `msg-label ${role === 'bot' ? 'bot' : ''}`;
         label.textContent = role === 'user' ? 'Você' : 'Prisma';
-        const fileEl = document.createElement('div');
-        fileEl.className = 'msg-file';
-        fileEl.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>${name}`;
-        d.appendChild(label); d.appendChild(fileEl);
+        header.appendChild(label);
+        const fileEl = document.createElement('div'); fileEl.className = 'msg-file';
+        fileEl.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>${name}`;
+        d.appendChild(header); d.appendChild(fileEl);
         c.appendChild(d); scrollBottom();
     }
 
