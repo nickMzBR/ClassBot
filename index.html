@@ -8,276 +8,119 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #1a1a1a;
-            --sidebar: #111;
-            --surface: #222;
-            --surface2: #2a2a2a;
-            --border: #333;
-            --blue: #3b82f6;
-            --blue-hover: #2563eb;
-            --blue-dim: rgba(59,130,246,0.12);
-            --text: #efefef;
-            --muted: #666;
-            --danger: #ef4444;
+            --bg: #1a1a1a; --sidebar: #111; --surface: #222;
+            --surface2: #2a2a2a; --border: #333;
+            --blue: #3b82f6; --blue-hover: #2563eb; --blue-dim: rgba(59,130,246,0.12);
+            --text: #efefef; --muted: #666; --danger: #ef4444;
         }
-
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
         body, html {
-            height: 100dvh; width: 100%;
-            background: var(--bg); color: var(--text);
+            height: 100dvh; width: 100%; background: var(--bg); color: var(--text);
             font-family: 'Inter', sans-serif; font-size: 14px;
-            overflow: hidden; display: flex; position: fixed;
-            -webkit-font-smoothing: antialiased;
+            overflow: hidden; display: flex; position: fixed; -webkit-font-smoothing: antialiased;
         }
-
         ::-webkit-scrollbar { width: 3px; }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
         /* ── LOGIN ── */
-        #login-overlay {
-            position: fixed; inset: 0; background: var(--bg);
-            z-index: 2000; display: flex; align-items: center; justify-content: center;
-        }
-
-        .auth-card {
-            width: 90%; max-width: 320px;
-            background: var(--surface); border: 1px solid var(--border);
-            border-radius: 14px; padding: 32px 28px;
-        }
-
-        .auth-logo {
-            width: 40px; height: 40px; border-radius: 10px;
-            background: var(--blue); display: flex; align-items: center; justify-content: center;
-            font-family: 'IBM Plex Mono', monospace; font-weight: 500; font-size: 16px;
-            color: #fff; margin: 0 auto 18px;
-        }
-
+        #login-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; align-items: center; justify-content: center; }
+        .auth-card { width: 90%; max-width: 320px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 32px 28px; }
+        .auth-logo { width: 40px; height: 40px; border-radius: 10px; background: var(--blue); display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-weight: 500; font-size: 16px; color: #fff; margin: 0 auto 18px; }
         .auth-card h2 { text-align: center; font-size: 17px; font-weight: 600; margin-bottom: 4px; }
         .auth-card p { text-align: center; color: var(--muted); font-size: 12px; margin-bottom: 22px; }
-
-        .auth-input {
-            width: 100%; padding: 10px 13px; margin-bottom: 9px;
-            border-radius: 8px; border: 1px solid var(--border);
-            background: var(--surface2); color: var(--text);
-            font-family: 'Inter', sans-serif; font-size: 14px;
-            outline: none; transition: border-color .2s;
-        }
-
+        .auth-input { width: 100%; padding: 10px 13px; margin-bottom: 9px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; outline: none; transition: border-color .2s; }
         .auth-input:focus { border-color: var(--blue); }
         .auth-input::placeholder { color: var(--muted); }
-
-        .btn-primary {
-            width: 100%; padding: 10px; border-radius: 8px;
-            background: var(--blue); border: none; color: #fff;
-            font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14px;
-            cursor: pointer; transition: background .15s; margin-top: 2px;
-        }
-
+        .btn-primary { width: 100%; padding: 10px; border-radius: 8px; background: var(--blue); border: none; color: #fff; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14px; cursor: pointer; transition: background .15s; margin-top: 2px; }
         .btn-primary:hover { background: var(--blue-hover); }
-
-        .auth-link {
-            display: block; text-align: center; margin-top: 13px;
-            color: var(--muted); font-size: 12px; cursor: pointer;
-            background: none; border: none; font-family: 'Inter', sans-serif;
-        }
-
+        .auth-link { display: block; text-align: center; margin-top: 13px; color: var(--muted); font-size: 12px; cursor: pointer; background: none; border: none; font-family: 'Inter', sans-serif; }
         .auth-link:hover { color: var(--text); }
 
         /* ── SIDEBAR ── */
-        #sidebar {
-            width: 255px; background: var(--sidebar);
-            display: flex; flex-direction: column;
-            border-right: 1px solid var(--border);
-            transition: transform .25s ease; z-index: 1000;
-        }
-
-        .sidebar-top {
-            padding: 16px 14px 12px;
-            border-bottom: 1px solid var(--border);
-            display: flex; align-items: center; gap: 9px;
-        }
-
-        .s-logo {
-            width: 27px; height: 27px; border-radius: 7px;
-            background: var(--blue); display: flex; align-items: center; justify-content: center;
-            font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #fff; flex-shrink: 0;
-        }
-
+        #sidebar { width: 255px; background: var(--sidebar); display: flex; flex-direction: column; border-right: 1px solid var(--border); transition: transform .25s ease; z-index: 1000; }
+        .sidebar-top { padding: 16px 14px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 9px; }
+        .s-logo { width: 27px; height: 27px; border-radius: 7px; background: var(--blue); display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #fff; flex-shrink: 0; }
         .s-title { font-weight: 600; font-size: 14px; }
-
-        .btn-new {
-            margin: 10px 12px; padding: 9px 12px;
-            border: 1px solid var(--border); border-radius: 8px;
-            cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px;
-            font-weight: 500; color: var(--text); background: transparent;
-            display: flex; align-items: center; gap: 7px;
-            transition: background .15s, border-color .15s;
-        }
-
+        .btn-new { margin: 10px 12px; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; color: var(--text); background: transparent; display: flex; align-items: center; gap: 7px; transition: background .15s, border-color .15s; }
         .btn-new:hover { background: var(--surface); border-color: #444; }
-
         #chat-list { flex: 1; overflow-y: auto; padding: 4px 8px; }
-
-        .chat-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 8px 10px; margin-bottom: 2px; border-radius: 7px;
-            cursor: pointer; color: var(--muted); transition: background .15s, color .15s; gap: 8px;
-        }
-
+        .chat-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; margin-bottom: 2px; border-radius: 7px; cursor: pointer; color: var(--muted); transition: background .15s, color .15s; gap: 8px; }
         .chat-item:hover { background: var(--surface); color: var(--text); }
         .chat-item.active { background: var(--surface2); color: var(--text); }
-
-        .chat-name {
-            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-            flex: 1; font-size: 13px;
-        }
-
-        .chat-del {
-            opacity: 0; font-size: 13px; flex-shrink: 0;
-            transition: opacity .15s; color: var(--muted); background: none; border: none; cursor: pointer;
-        }
-
+        .chat-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; font-size: 13px; }
+        .chat-del { opacity: 0; font-size: 13px; flex-shrink: 0; transition: opacity .15s; color: var(--muted); background: none; border: none; cursor: pointer; }
         .chat-item:hover .chat-del { opacity: 1; }
         .chat-del:hover { color: var(--danger); }
-
-        .user-footer {
-            padding: 12px 14px; padding-bottom: calc(12px + env(safe-area-inset-bottom));
-            border-top: 1px solid var(--border);
-            display: flex; align-items: center; justify-content: space-between; gap: 10px;
-        }
-
+        .user-footer { padding: 12px 14px; padding-bottom: calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
         .user-name { font-size: 13px; font-weight: 500; }
-
-        .btn-logout {
-            padding: 5px 9px; border-radius: 6px; font-size: 11px; font-weight: 600;
-            cursor: pointer; font-family: 'Inter', sans-serif;
-            background: transparent; color: var(--muted); border: 1px solid var(--border);
-            transition: all .15s; white-space: nowrap;
-        }
-
+        .btn-logout { padding: 5px 9px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; background: transparent; color: var(--muted); border: 1px solid var(--border); transition: all .15s; white-space: nowrap; }
         .btn-logout:hover { border-color: var(--danger); color: var(--danger); }
 
         /* ── MAIN ── */
         #main { flex: 1; display: flex; flex-direction: column; height: 100dvh; min-width: 0; }
-
-        header {
-            padding: 13px 20px; padding-top: calc(13px + env(safe-area-inset-top));
-            border-bottom: 1px solid var(--border);
-            display: flex; align-items: center; gap: 12px;
-            background: var(--bg); flex-shrink: 0;
-        }
-
-        .menu-toggle {
-            display: none; cursor: pointer; background: none; border: none;
-            color: var(--muted); padding: 4px; border-radius: 5px;
-            font-size: 18px; line-height: 1;
-        }
-
+        header { padding: 13px 20px; padding-top: calc(13px + env(safe-area-inset-top)); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; background: var(--bg); flex-shrink: 0; }
+        .menu-toggle { display: none; cursor: pointer; background: none; border: none; color: var(--muted); padding: 4px; border-radius: 5px; font-size: 18px; line-height: 1; }
         .menu-toggle:hover { color: var(--text); }
-
         .header-title { font-weight: 600; font-size: 15px; }
         .header-sub { font-size: 11px; color: var(--muted); margin-left: auto; font-family: 'IBM Plex Mono', monospace; }
 
         /* ── MESSAGES ── */
         #messages-wrap { flex: 1; overflow-y: auto; }
-
-        #messages {
-            padding: 24px 20px; width: 100%;
-            max-width: 740px; margin: 0 auto;
-            display: flex; flex-direction: column; gap: 22px;
-            min-height: 100%;
-        }
-
-        .empty-state {
-            flex: 1; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            text-align: center; color: var(--muted); gap: 10px;
-        }
-
-        .empty-icon {
-            width: 46px; height: 46px; border-radius: 12px;
-            background: var(--surface); border: 1px solid var(--border);
-            display: flex; align-items: center; justify-content: center;
-            font-family: 'IBM Plex Mono', monospace; font-size: 19px;
-            color: var(--blue); margin-bottom: 4px;
-        }
-
+        #messages { padding: 24px 20px; width: 100%; max-width: 740px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; min-height: 100%; }
+        .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: var(--muted); gap: 10px; }
+        .empty-icon { width: 46px; height: 46px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 19px; color: var(--blue); margin-bottom: 4px; }
         .empty-state h3 { font-size: 15px; font-weight: 600; color: var(--text); }
         .empty-state p { font-size: 13px; max-width: 240px; line-height: 1.6; }
-
         .msg-row { display: flex; flex-direction: column; gap: 5px; }
-
-        .msg-label {
-            font-size: 10.5px; font-weight: 600; text-transform: uppercase;
-            letter-spacing: .06em; color: var(--muted);
-        }
-
+        .msg-label { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
         .msg-label.bot { color: var(--blue); }
+        .msg-content { font-size: 14px; line-height: 1.75; white-space: pre-wrap; word-break: break-word; }
+        .msg-content.user-bubble { display: inline-block; max-width: 82%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 9px 13px; }
 
-        .msg-content {
-            font-size: 14px; line-height: 1.75;
-            white-space: pre-wrap; word-break: break-word;
+        /* ── IMAGEM GERADA ── */
+        .img-container { display: flex; flex-direction: column; gap: 8px; }
+        .img-caption { font-size: 12px; color: var(--muted); font-style: italic; }
+        .gen-img {
+            max-width: 100%; max-height: 400px; border-radius: 10px;
+            border: 1px solid var(--border); display: block;
+            cursor: pointer; transition: opacity .2s;
         }
-
-        .msg-content.user-bubble {
-            display: inline-block; max-width: 82%;
-            background: var(--surface2); border: 1px solid var(--border);
-            border-radius: 10px; padding: 9px 13px;
+        .gen-img:hover { opacity: .88; }
+        .img-loading {
+            display: flex; align-items: center; gap: 10px;
+            color: var(--muted); font-size: 13px;
         }
+        .img-loading .spinner {
+            width: 16px; height: 16px; border: 2px solid var(--border);
+            border-top-color: var(--blue); border-radius: 50%;
+            animation: spin .7s linear infinite; flex-shrink: 0;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         /* ── INPUT ── */
-        #input-area {
-            padding: 10px 20px; padding-bottom: calc(10px + env(safe-area-inset-bottom));
-            width: 100%; max-width: 740px; margin: 0 auto; flex-shrink: 0;
-        }
-
-        .input-box {
-            display: flex; background: var(--surface2);
-            border-radius: 11px; border: 1px solid var(--border);
-            align-items: flex-end; padding: 7px 7px 7px 13px; gap: 8px;
-            transition: border-color .2s, box-shadow .2s;
-        }
-
-        .input-box:focus-within {
-            border-color: var(--blue);
-            box-shadow: 0 0 0 3px var(--blue-dim);
-        }
-
-        #userInput {
-            flex: 1; background: transparent; border: none; color: var(--text);
-            outline: none; font-family: 'Inter', sans-serif; font-size: 14px;
-            line-height: 1.5; resize: none; min-height: 22px; max-height: 110px;
-            overflow-y: auto; padding: 4px 0;
-        }
-
+        #input-area { padding: 10px 20px; padding-bottom: calc(10px + env(safe-area-inset-bottom)); width: 100%; max-width: 740px; margin: 0 auto; flex-shrink: 0; }
+        .input-box { display: flex; background: var(--surface2); border-radius: 11px; border: 1px solid var(--border); align-items: flex-end; padding: 7px 7px 7px 13px; gap: 6px; transition: border-color .2s, box-shadow .2s; }
+        .input-box:focus-within { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-dim); }
+        #userInput { flex: 1; background: transparent; border: none; color: var(--text); outline: none; font-family: 'Inter', sans-serif; font-size: 14px; line-height: 1.5; resize: none; min-height: 22px; max-height: 110px; overflow-y: auto; padding: 4px 0; }
         #userInput::placeholder { color: var(--muted); }
-
-        #sendBtn {
-            width: 32px; height: 32px; border-radius: 7px; flex-shrink: 0;
-            background: var(--blue); border: none; color: white; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            transition: background .15s, transform .1s;
-        }
-
-        #sendBtn:hover { background: var(--blue-hover); }
-        #sendBtn:active { transform: scale(.93); }
-        #sendBtn:disabled { opacity: .35; cursor: not-allowed; }
-        #sendBtn svg { width: 15px; height: 15px; }
-
+        .icon-btn { width: 32px; height: 32px; border-radius: 7px; flex-shrink: 0; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s, transform .1s; background: var(--surface); color: var(--muted); }
+        .icon-btn:hover { background: var(--border); color: var(--text); }
+        .icon-btn:active { transform: scale(.93); }
+        .icon-btn svg { width: 15px; height: 15px; }
+        #sendBtn { background: var(--blue); color: white; }
+        #sendBtn:hover { background: var(--blue-hover); color: white; }
+        #sendBtn:disabled, #imgBtn:disabled { opacity: .35; cursor: not-allowed; transform: none; }
         .hint { text-align: center; font-size: 10.5px; color: var(--muted); margin-top: 8px; opacity: .5; }
 
-        /* ── MOBILE ── */
-        #mob-overlay {
-            display: none; position: fixed; inset: 0;
-            background: rgba(0,0,0,.65); z-index: 900;
-        }
+        /* ── MODAL IMAGEM ── */
+        #img-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 3000; align-items: center; justify-content: center; cursor: zoom-out; }
+        #img-modal.show { display: flex; }
+        #img-modal img { max-width: 92vw; max-height: 90vh; border-radius: 10px; }
 
+        /* ── MOBILE ── */
+        #mob-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 900; }
         @media (max-width: 768px) {
-            #sidebar {
-                position: fixed; height: 100dvh; left: 0;
-                transform: translateX(-100%); width: 255px;
-            }
+            #sidebar { position: fixed; height: 100dvh; left: 0; transform: translateX(-100%); width: 255px; }
             #sidebar.open { transform: translateX(0); box-shadow: 8px 0 40px rgba(0,0,0,.8); }
             #mob-overlay.show { display: block; }
             .menu-toggle { display: block; }
@@ -288,7 +131,7 @@
 
 <div id="login-overlay">
     <div class="auth-card">
-        <div class="auth-logo">C</div>
+        <div class="auth-logo">P</div>
         <h2>Prisma</h2>
         <p>Entra para continuar</p>
         <input type="text" id="userLogin" class="auth-input" placeholder="Usuário">
@@ -302,7 +145,7 @@
 
 <aside id="sidebar">
     <div class="sidebar-top">
-        <div class="s-logo">C</div>
+        <div class="s-logo">P</div>
         <span class="s-title">Prisma</span>
     </div>
     <button class="btn-new" onclick="novaConversa()">
@@ -320,14 +163,14 @@
     <header>
         <button class="menu-toggle" onclick="toggleMenu()">☰</button>
         <span class="header-title">Prisma</span>
-        <span class="header-sub">llama-3.3-70b</span>
+        <span class="header-sub">llama-3.3-70b · pollinations</span>
     </header>
     <div id="messages-wrap">
         <div id="messages">
             <div class="empty-state" id="empty">
-                <div class="empty-icon">C</div>
+                <div class="empty-icon">P</div>
                 <h3>Como posso ajudar?</h3>
-                <p>Inicia uma conversa ou seleciona uma anterior.</p>
+                <p>Especialista em programação. Também gero imagens.</p>
             </div>
         </div>
     </div>
@@ -335,13 +178,24 @@
         <div class="input-box">
             <textarea id="userInput" placeholder="Escreve uma mensagem..." rows="1"
                 oninput="resizeInput(this)" onkeydown="keyHandler(event)"></textarea>
-            <button id="sendBtn" onclick="enviar()">
+            <button class="icon-btn" id="imgBtn" onclick="gerarImagem()" title="Gerar imagem">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+                    <path d="M21 15l-5-5L5 21"/>
+                </svg>
+            </button>
+            <button class="icon-btn" id="sendBtn" onclick="enviar()">
                 <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
             </button>
         </div>
-        <p class="hint">Enter para enviar · Shift+Enter para nova linha</p>
+        <p class="hint">Enter para enviar · 🖼 para gerar imagem do que escreveste</p>
     </div>
 </main>
+
+<!-- Modal fullscreen imagem -->
+<div id="img-modal" onclick="document.getElementById('img-modal').classList.remove('show')">
+    <img id="modal-img" src="" alt="">
+</div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -363,6 +217,30 @@
     let conversaAtivaId = null;
     let historico = [];
     let sending = false;
+
+    // Palavras-chave que indicam pedido de imagem
+    const IMG_KEYWORDS = [
+        'gera uma imagem', 'gerar imagem', 'cria uma imagem', 'criar imagem',
+        'desenha', 'desenhe', 'ilustra', 'ilustre', 'mostra uma imagem',
+        'generate image', 'create image', 'draw', 'imagine', 'visualize',
+        'foto de', 'imagem de', 'picture of', 'image of'
+    ];
+
+    function deveGerarImagem(texto) {
+        const t = texto.toLowerCase();
+        return IMG_KEYWORDS.some(k => t.includes(k));
+    }
+
+    function promptParaImagem(texto) {
+        // Remove frases de comando, deixa só o assunto
+        let p = texto.toLowerCase();
+        const removes = ['gera uma imagem de', 'gera uma imagem', 'gerar imagem de', 'cria uma imagem de',
+            'cria uma imagem', 'criar imagem de', 'desenha', 'desenhe', 'ilustra', 'ilustre',
+            'mostra uma imagem de', 'generate image of', 'create image of', 'draw', 'imagine', 'visualize',
+            'foto de', 'imagem de', 'picture of', 'image of'];
+        removes.forEach(r => { p = p.replace(r, ''); });
+        return p.trim() || texto;
+    }
 
     if (usuario) {
         document.getElementById('login-overlay').style.display = 'none';
@@ -413,8 +291,7 @@
                 const label = data[id][0]?.content?.slice(0, 40) || "Conversa";
                 const item = document.createElement('div');
                 item.className = `chat-item ${id === conversaAtivaId ? 'active' : ''}`;
-                item.innerHTML = `
-                    <span class="chat-name" onclick="abrirConversa('${id}')">${label}</span>
+                item.innerHTML = `<span class="chat-name" onclick="abrirConversa('${id}')">${label}</span>
                     <button class="chat-del" onclick="excluirConversa('${id}')">✕</button>`;
                 list.appendChild(item);
             });
@@ -445,14 +322,21 @@
     function emptyState() {
         const d = document.createElement('div');
         d.className = 'empty-state'; d.id = 'empty';
-        d.innerHTML = `<div class="empty-icon">C</div><h3>Como posso ajudar?</h3><p>Inicia uma conversa ou seleciona uma anterior.</p>`;
+        d.innerHTML = `<div class="empty-icon">P</div><h3>Como posso ajudar?</h3><p>Especialista em programação. Também gero imagens.</p>`;
         return d;
     }
 
     function renderizar() {
         const c = document.getElementById('messages');
         c.innerHTML = '';
-        historico.forEach(m => addMsgDOM(m.content, m.role === 'user' ? 'user' : 'bot', false));
+        historico.forEach(m => {
+            if (m.type === 'image') {
+                addMsgDOM(m.content, 'user', false);
+                addImageMsg(m.imageUrl, m.content);
+            } else {
+                addMsgDOM(m.content, m.role === 'user' ? 'user' : 'bot', false);
+            }
+        });
         scrollBottom();
     }
 
@@ -464,18 +348,95 @@
         tick();
     }
 
+    // Gerar imagem via botão
+    window.gerarImagem = async () => {
+        const input = document.getElementById('userInput');
+        const text = input.value.trim();
+        if (!text || !usuario || sending) return;
+        input.value = ''; input.style.height = 'auto';
+        await processarGeracaoImagem(text);
+    };
+
+    async function processarGeracaoImagem(prompt) {
+        sending = true;
+        setBtnsDisabled(true);
+
+        const empty = document.getElementById('empty');
+        if (empty) empty.remove();
+        if (!conversaAtivaId) conversaAtivaId = push(ref(db, `conversas/${usuario}`)).key;
+
+        addMsgDOM(prompt, 'user', false);
+        historico.push({ role: "user", content: prompt, type: "image" });
+
+        // Mostrar loading
+        const loadRow = document.createElement('div');
+        loadRow.className = 'msg-row';
+        loadRow.innerHTML = `<div class="msg-label bot">Prisma</div>
+            <div class="img-loading"><div class="spinner"></div>Gerando imagem...</div>`;
+        document.getElementById('messages').appendChild(loadRow);
+        scrollBottom();
+
+        const imagePrompt = promptParaImagem(prompt);
+        const seed = Math.floor(Math.random() * 99999);
+        const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(imagePrompt)}?width=800&height=600&seed=${seed}&nologo=true`;
+
+        try {
+            await new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = resolve;
+                img.onerror = reject;
+                img.src = url;
+                setTimeout(reject, 30000); // timeout 30s
+            });
+            loadRow.remove();
+            addImageMsg(url, imagePrompt);
+            historico.push({ role: "assistant", content: `[Imagem gerada: ${imagePrompt}]`, type: "image", imageUrl: url });
+            await set(ref(db, `conversas/${usuario}/${conversaAtivaId}`), historico);
+        } catch {
+            loadRow.remove();
+            const errRow = addMsgDOM("Não consegui gerar a imagem. Tenta novamente.", 'bot', false);
+        }
+
+        sending = false;
+        setBtnsDisabled(false);
+        document.getElementById('userInput').focus();
+    }
+
+    function addImageMsg(url, caption) {
+        const c = document.getElementById('messages');
+        const d = document.createElement('div');
+        d.className = 'msg-row';
+        d.innerHTML = `<div class="msg-label bot">Prisma</div>
+            <div class="img-container">
+                <img class="gen-img" src="${url}" alt="${caption}" onclick="abrirModal('${url}')">
+                <span class="img-caption">${caption}</span>
+            </div>`;
+        c.appendChild(d); scrollBottom();
+    }
+
+    window.abrirModal = (url) => {
+        document.getElementById('modal-img').src = url;
+        document.getElementById('img-modal').classList.add('show');
+    };
+
     window.enviar = async () => {
         if (sending) return;
         const input = document.getElementById('userInput');
         const text = input.value.trim();
         if (!text || !usuario) return;
 
+        // Detecção automática de pedido de imagem
+        if (deveGerarImagem(text)) {
+            input.value = ''; input.style.height = 'auto';
+            await processarGeracaoImagem(text);
+            return;
+        }
+
         sending = true;
-        document.getElementById('sendBtn').disabled = true;
+        setBtnsDisabled(true);
 
         const empty = document.getElementById('empty');
         if (empty) empty.remove();
-
         if (!conversaAtivaId) conversaAtivaId = push(ref(db, `conversas/${usuario}`)).key;
 
         input.value = ''; input.style.height = 'auto';
@@ -503,9 +464,14 @@
         }
 
         sending = false;
-        document.getElementById('sendBtn').disabled = false;
+        setBtnsDisabled(false);
         input.focus();
     };
+
+    function setBtnsDisabled(v) {
+        document.getElementById('sendBtn').disabled = v;
+        document.getElementById('imgBtn').disabled = v;
+    }
 
     function addMsgDOM(txt, role, loading) {
         const c = document.getElementById('messages');
