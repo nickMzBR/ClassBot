@@ -67,7 +67,13 @@ You specialize in software development: JavaScript, TypeScript, Python, Java, C,
         }
 
         if (data.choices && data.choices[0]) {
-            res.status(200).json({ answer: data.choices[0].message.content });
+            let answer = data.choices[0].message.content || "";
+            // Remove chain-of-thought thinking blocks (Qwen3, DeepSeek R1, etc.)
+            answer = answer.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+            // Also remove any leading/trailing blank lines left behind
+            answer = answer.replace(/^
++/, "").trim();
+            res.status(200).json({ answer });
         } else {
             res.status(200).json({ answer: "A Groq não devolveu uma resposta válida." });
         }
