@@ -747,10 +747,7 @@
         // Action buttons for bot messages
         if(role==="bot"&&!loading&&txt){
             const actions=document.createElement("div");actions.className="msg-actions";
-            [{icon:"◈",label:"Resumir",prompt:`Resume a seguinte resposta em 2-3 frases:\n\n${txt}`},
-             {icon:"🌐",label:"Traduzir",prompt:`Traduza a seguinte resposta para inglês:\n\n${txt}`},
-             {icon:"💡",label:"Explicar",prompt:`Explica de forma mais simples e detalhada:\n\n${txt}`}
-            ].forEach(b=>{
+            [{icon[{icon:"◈",label:"Resumir",prompt:`Resume a seguinte resposta em 2-3 frases:\n\n${txt}`}].forEach(b=>{
                 const btn=document.createElement("button");btn.className="action-btn";btn.textContent=b.icon+" "+b.label;
                 btn.onclick=()=>{const inp=document.getElementById("userInput");inp.value=b.prompt;resizeInput(inp);inp.focus();};
                 actions.appendChild(btn);
