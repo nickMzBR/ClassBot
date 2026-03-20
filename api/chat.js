@@ -1,48 +1,46 @@
 export default async function handler(req, res) {
     try {
-        const { mensagens, personality } = req.body;
+        const { mensagens, personality, memory, model } = req.body;
         const chave = process.env.GROQ_API_KEY;
 
         if (!chave) {
             return res.status(200).json({ answer: "Falta a chave GROQ_API_KEY na Vercel." });
         }
 
+        const memoryBlock = memory && memory.length > 0
+            ? `\n\n## O que sabes sobre o utilizador\n${memory.map(f => `- ${f}`).join('\n')}`
+            : '';
+
         const BASE_SYSTEM = `You are Prisma, an AI assistant created by Red. You are a programming expert.
 
 ## Expertise
-You specialize in software development. This includes:
-- All major languages: JavaScript, TypeScript, Python, Java, C, C++, Rust, Go, etc.
-- Frontend: HTML, CSS, React, Vue, Next.js, Tailwind
-- Backend: Node.js, Express, FastAPI, databases (SQL, NoSQL)
-- DevOps: Docker, Git, CI/CD, Vercel, cloud services
-- Algorithms, data structures, architecture, debugging, code review
-
-## File and image handling
-When the user sends [Imagem: filename] or [Arquivo: filename], acknowledge it and respond based on context.
+You specialize in software development: JavaScript, TypeScript, Python, Java, C, C++, Rust, Go, React, Vue, Next.js, Node.js, databases, DevOps, algorithms, and more.
 
 ## Behavior
 - Answer in the same language the user writes in (default: Portuguese)
-- Be formal, clear and direct
-- For code questions: provide working, complete code examples
-- Never pad responses unnecessarily
-- Do not start with filler phrases like "Claro!", "Com certeza!", "Ótima pergunta!"
+- Be clear, direct, and concise
+- For code: provide working, complete examples with brief explanation
+- Never use filler phrases like "Claro!", "Com certeza!", "Ótima pergunta!"
+- Name: Prisma · Creator: Red${memoryBlock}`;
 
-## Identity
-- Name: Prisma
-- Creator: Red`;
-
-        // If user has a custom personality, override the system prompt
         const systemPrompt = personality && personality.trim()
-            ? `You are Prisma, an AI assistant created by Red.\n\n## Personality (set by user)\n${personality.trim()}\n\n## Rules\n- Answer in the same language the user writes in\n- Name: Prisma\n- Creator: Red`
+            ? `You are Prisma, an AI assistant created by Red.\n\n## Personalidade\n${personality.trim()}\n\n## Rules\n- Answer in the same language the user writes in\n- Name: Prisma · Creator: Red${memoryBlock}`
             : BASE_SYSTEM;
+
+        const ALLOWED_MODELS = [
+            "openai/gpt-oss-120b",
+            "llama-3.3-70b-versatile",
+            "qwen-2.5-coder-32b",
+            "openai/gpt-oss-20b",
+            "llama-3.1-8b-instant",
+        ];
 
         const hasImages = mensagens.some(m =>
             Array.isArray(m.content) && m.content.some(c => c.type === 'image_url')
         );
 
-        const model = hasImages
-            ? "meta-llama/llama-4-scout-17b-16e-instruct"
-            : "llama-3.3-70b-versatile";
+        let selectedModel = ALLOWED_MODELS.includes(model) ? model : "llama-3.3-70b-versatile";
+        if (hasImages) selectedModel = "openai/gpt-oss-120b"; // GPT-OSS 120B also supports vision
 
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
@@ -51,7 +49,7 @@ When the user sends [Imagem: filename] or [Arquivo: filename], acknowledge it an
                 "Authorization": `Bearer ${chave}`
             },
             body: JSON.stringify({
-                model,
+                model: selectedModel,
                 messages: [
                     { role: "system", content: systemPrompt },
                     ...mensagens
