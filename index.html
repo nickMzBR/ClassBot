@@ -834,7 +834,7 @@
         } catch{return txt.slice(0,40);}
     }
 
-    window.enviar = async (regenerate) => {
+    window.enviar = async () => {
         if(sending) return;
         const input=document.getElementById("userInput");
         const text=input.value.trim();
@@ -860,78 +860,47 @@
         document.getElementById("messages").appendChild(typingRow); scrollBottom();
 
         try {
-            const mensagensAPI=historico.map(m=>{
-                const imgFiles=m===userMsg?filesSnapshot.filter(f=>f.kind==="image"):[];
-                if(imgFiles.length>0){
-                    const parts=[]; imgFiles.forEach(f=>parts.push({type:"image_url",image_url:{url:f.dataUrl}}));
-                    filesSnapshot.filter(f=>f.kind==="text").forEach(f=>parts.push({type:"text",text:"Ficheiro "+f.name+":\n```\n"+f.content+"\n```"}));
-                    if(text) parts.push({type:"text",text}); return{role:"user",content:parts};
+            const mensagensAPI = historico.map(m => {
+                const imgFiles = m === userMsg ? filesSnapshot.filter(f => f.kind === "image") : [];
+                if (imgFiles.length > 0) {
+                    const parts = [];
+                    imgFiles.forEach(f => parts.push({ type: "image_url", image_url: { url: f.dataUrl } }));
+                    filesSnapshot.filter(f => f.kind === "text").forEach(f => parts.push({ type: "text", text: "Ficheiro " + f.name + ":\n```\n" + f.content + "\n```" }));
+                    if (text) parts.push({ type: "text", text });
+                    return { role: "user", content: parts };
                 }
-                let c=""; if(m.files?.length) m.files.forEach(f=>{c+=f.kind==="text"&&f.content?"Ficheiro "+f.name+":\n```\n"+f.content+"\n```\n":"["+(f.kind==="image"?"Imagem":"Ficheiro")+": "+f.name+"]\n";});
-                if(m.text) c+=m.text; return{role:m.role,content:c.trim()};
-            }).filter(m=>m.content&&(Array.isArray(m.content)?m.content.length:m.content.trim())).slice(-8);
+                let c = "";
+                if (m.files?.length) m.files.forEach(f => {
+                    c += f.kind === "text" && f.content ? "Ficheiro " + f.name + ":\n```\n" + f.content + "\n```\n" : "[" + (f.kind === "image" ? "Imagem" : "Ficheiro") + ": " + f.name + "]\n";
+                });
+                if (m.text) c += m.text;
+                return { role: m.role, content: c.trim() };
+            }).filter(m => m.content && (Array.isArray(m.content) ? m.content.length : m.content.trim())).slice(-8);
 
-            // STREAMING
-            const res = await fetch("/api/stream", {
+            const res = await fetch("/api/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ mensagens: mensagensAPI, personality: cfg.personality||"", memory: userMemory, model: cfg.model||"llama-3.3-70b-versatile" })
+                body: JSON.stringify({ mensagens: mensagensAPI, personality: cfg.personality || "", memory: userMemory, model: cfg.model || "llama-3.3-70b-versatile" })
             });
-
+            const data = await res.json();
             document.getElementById("typing")?.remove();
 
-            if (!res.ok) { addMsgDOM("Erro na API: " + res.status, "bot", false); throw new Error("API error"); }
-
-            // Create bot message element for streaming
-            const botContent = addMsgDOM("", "bot", false, true);
-            let fullText = "";
-
-            const reader = res.body.getReader();
-            const decoder = new TextDecoder();
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                const chunk = decoder.decode(value, { stream: true });
-                const lines = chunk.split("\n");
-                for (const line of lines) {
-                    if (!line.startsWith("data: ")) continue;
-                    const data = line.slice(6).trim();
-                    if (data === "[DONE]") break;
-                    try {
-                        const parsed = JSON.parse(data);
-                        const delta = parsed.choices?.[0]?.delta?.content || "";
-                        if (delta) {
-                            fullText += delta;
-                            // Update display every chunk
-                            botContent.classList.add("streaming");
-                            botContent.textContent = fullText;
-                            scrollBottom();
-                        }
-                    } catch(e) {}
-                }
-            }
-
-            // Remove thinking blocks, render markdown
-            fullText = fullText.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
-            botContent.classList.remove("streaming");
-            if (cfg.markdown) {
-                botContent.innerHTML = marked.parse(fullText);
+            if (data.answer) {
+                addMsgDOM(data.answer, "bot", false, false);
+                historico.push({ role: "assistant", text: data.answer });
+                if (text) extractAndSaveMemory(text, data.answer);
+                const isFirst = historico.filter(m => m.role === "user").length === 1;
+                const title = isFirst ? await gerarTitulo(text || filesSnapshot[0]?.name || "Conversa") : null;
+                await set(ref(db, "conversas/" + usuario + "/" + conversaAtivaId), { title: title || null, msgs: historico });
             } else {
-                botContent.textContent = fullText;
+                addMsgDOM("Sem resposta.", "bot", false, false);
             }
-            playSound();
-            scrollBottom();
+        } catch(e) {
+            document.getElementById("typing")?.remove();
+            addMsgDOM("Erro: " + e.message, "bot", false, false);
+        }
 
-            historico.push({role:"assistant",text:fullText});
-            if(text) extractAndSaveMemory(text,fullText);
-            const isFirst=historico.filter(m=>m.role==="user").length===1;
-            const title=isFirst?await gerarTitulo(text||filesSnapshot[0]?.name||"Conversa"):null;
-            await set(ref(db,"conversas/"+usuario+"/"+conversaAtivaId),{title:title||null,msgs:historico});
-
-        } catch(e) { document.getElementById("typing")?.remove(); addMsgDOM("Erro: "+e.message,"bot",false); }
-
-        sending=false;
+                sending=false;
         document.getElementById("sendBtn").disabled=false;
         document.getElementById("attachBtn").disabled=false;
         input.focus();
@@ -1026,7 +995,7 @@
                         const rows = document.querySelectorAll(".msg-row");
                         rows[rows.length - 1].remove();
                         historico.pop();
-                        enviar(true);
+                        enviar();
                     } else {
                         document.getElementById("userInput").value = a.prompt + txt;
                         resizeInput(document.getElementById("userInput"));
