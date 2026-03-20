@@ -12,13 +12,12 @@ export default async function handler(req, res) {
             : "";
 
         const BASE_SYSTEM = "You are Prisma, an AI assistant created by Red. You are a programming expert.\n\n" +
-            "## Expertise\n" +
-            "You specialize in software development: JavaScript, TypeScript, Python, Java, C, C++, Rust, Go, React, Vue, Next.js, Node.js, databases, DevOps, algorithms, and more.\n\n" +
+            "You specialize in software development: JavaScript, TypeScript, Python, Java, C, C++, Rust, Go, React, Vue, Next.js, Node.js, databases, DevOps, algorithms.\n\n" +
             "## Behavior\n" +
             "- Answer in the same language the user writes in (default: Portuguese)\n" +
             "- Be clear, direct, and concise\n" +
-            "- For code: provide working, complete examples with brief explanation\n" +
-            "- Never use filler phrases like \"Claro!\", \"Com certeza!\", \"Otima pergunta!\"\n" +
+            "- For code: provide working, complete examples\n" +
+            "- Never use filler phrases\n" +
             "- Name: Prisma - Creator: Red" + memoryBlock;
 
         const systemPrompt = personality && personality.trim()
@@ -32,12 +31,28 @@ export default async function handler(req, res) {
             "llama-3.1-8b-instant",
         ];
 
+        const VISION_MODELS = ["openai/gpt-oss-120b"];
+
+        // Check if current batch has images
         const hasImages = mensagens.some(function(m) {
             return Array.isArray(m.content) && m.content.some(function(c) { return c.type === "image_url"; });
         });
 
-        var selectedModel = ALLOWED_MODELS.includes(model) ? model : "llama-3.3-70b-versatile";
-        if (hasImages) selectedModel = "openai/gpt-oss-120b";
+        // Force vision model if images present
+        var selectedModel = hasImages ? "openai/gpt-oss-120b" : (ALLOWED_MODELS.includes(model) ? model : "llama-3.3-70b-versatile");
+
+        // Sanitize messages: if model doesn't support vision, flatten array content to string
+        var sanitizedMensagens = mensagens.map(function(m) {
+            if (!Array.isArray(m.content)) return m;
+            // If vision model, keep as-is
+            if (VISION_MODELS.includes(selectedModel)) return m;
+            // Otherwise flatten to string (extract text parts only)
+            var text = m.content
+                .filter(function(c) { return c.type === "text"; })
+                .map(function(c) { return c.text; })
+                .join("\n");
+            return { role: m.role, content: text };
+        });
 
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
@@ -49,7 +64,7 @@ export default async function handler(req, res) {
                 model: selectedModel,
                 messages: [
                     { role: "system", content: systemPrompt },
-                    ...mensagens
+                    ...sanitizedMensagens
                 ],
                 temperature: 0.5,
                 top_p: 1,
@@ -65,7 +80,6 @@ export default async function handler(req, res) {
 
         if (data.choices && data.choices[0]) {
             var answer = data.choices[0].message.content || "";
-            // Remove chain-of-thought thinking blocks (Qwen3, DeepSeek R1)
             answer = answer.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
             res.status(200).json({ answer: answer });
         } else {
