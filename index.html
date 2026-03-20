@@ -167,6 +167,34 @@
         .code-preview-btn:hover { background: rgba(59,130,246,0.25); }
         @media (max-width: 768px) { #preview-panel { width: 100%; min-width: unset; border-left: none; } }
 
+
+        /* MODEL CARDS */
+        .model-card {
+            border: 1px solid var(--border); border-radius: 10px;
+            padding: 11px 13px; cursor: pointer;
+            transition: border-color .15s, background .15s;
+            background: var(--surface2);
+            display: flex; align-items: flex-start; gap: 11px;
+        }
+        .model-card:hover { border-color: var(--blue); }
+        .model-card.active { border-color: var(--blue); background: var(--blue-dim); }
+        .model-icon {
+            width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; background: var(--surface);
+        }
+        .model-info { flex: 1; min-width: 0; }
+        .model-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+        .model-desc { font-size: 11.5px; color: var(--muted); line-height: 1.5; }
+        .model-badge {
+            font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 999px;
+            white-space: nowrap; align-self: flex-start; margin-top: 2px;
+        }
+        .badge-fast { background: rgba(74,222,128,0.12); color: #4ade80; border: 1px solid rgba(74,222,128,0.25); }
+        .badge-smart { background: rgba(59,130,246,0.12); color: var(--blue); border: 1px solid rgba(59,130,246,0.25); }
+        .badge-vision { background: rgba(251,191,36,0.12); color: #fbbf24; border: 1px solid rgba(251,191,36,0.25); }
+        .badge-balance { background: rgba(167,139,250,0.12); color: #a78bfa; border: 1px solid rgba(167,139,250,0.25); }
+
         /* SETTINGS */
         #settings-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 4000; align-items: center; justify-content: center; }
         #settings-overlay.show { display: flex; }
@@ -348,6 +376,10 @@
             </div>
             <div class="settings-divider"></div>
             <div class="settings-section">Modelo</div>
+            <div style="padding:4px 20px 12px;">
+                <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Escolhe o modelo de IA a usar nas respostas.</div>
+                <div id="model-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+            </div>
             <div class="settings-row">
                 <div><div class="settings-label">Velocidade de digitação</div><div class="settings-desc">Caracteres por tick</div></div>
                 <select class="settings-select" id="cfg-speed" onchange="applySetting('speed',this.value)">
@@ -408,7 +440,55 @@
     let sending = false;
     let pendingFiles = [];
     let userMemory = [];
-    const DEFAULT_CFG = { typing: true, markdown: true, enter: true, sound: false, fontsize: "14", theme: "dark", speed: "2", personality: "" };
+    const MODELS = [
+        {
+            id: "openai/gpt-oss-120b",
+            name: "GPT-OSS 120B",
+            maker: "OpenAI",
+            icon: "✦",
+            desc: "O mais poderoso do Groq. 120B parâmetros, raciocínio avançado, excelente para qualquer tarefa complexa.",
+            badge: "🔥 Mais poderoso", badgeClass: "badge-smart",
+            speed: "500 t/s"
+        },
+        {
+            id: "llama-3.3-70b-versatile",
+            name: "Llama 3.3 70B",
+            maker: "Meta",
+            icon: "🦙",
+            desc: "O melhor da Meta. Rápido, inteligente e confiável — ótimo para código, análise e conversas longas.",
+            badge: "⭐ Recomendado", badgeClass: "badge-smart",
+            speed: "280 t/s"
+        },
+        {
+            id: "qwen-2.5-coder-32b",
+            name: "Qwen 2.5 Coder 32B",
+            maker: "Alibaba",
+            icon: "💻",
+            desc: "Especialista em programação. Treinado exclusivamente para código — geração, debug, refactor e documentação em todas as linguagens.",
+            badge: "👨‍💻 Expert em código", badgeClass: "badge-vision",
+            speed: "~300 t/s"
+        },
+        {
+            id: "openai/gpt-oss-20b",
+            name: "GPT-OSS 20B",
+            maker: "OpenAI",
+            icon: "✧",
+            desc: "Versão compacta e ultrarrápida do GPT-OSS. Qualidade OpenAI com latência mínima — ideal para uso intensivo.",
+            badge: "⚡ Ultra-rápido", badgeClass: "badge-fast",
+            speed: "1000 t/s"
+        },
+        {
+            id: "llama-3.1-8b-instant",
+            name: "Llama 3.1 8B",
+            maker: "Meta",
+            icon: "⚡",
+            desc: "O mais leve e rápido. Para perguntas simples e quando cada milissegundo conta.",
+            badge: "⚡ Mais rápido", badgeClass: "badge-fast",
+            speed: "560 t/s"
+        },
+    ];
+
+    const DEFAULT_CFG = { typing: true, markdown: true, enter: true, sound: false, fontsize: "14", theme: "dark", speed: "2", personality: "", model: "llama-3.3-70b-versatile" };
     let cfg = { ...DEFAULT_CFG };
 
     const PERSONALITY_PRESETS = [
@@ -520,6 +600,7 @@
         document.getElementById("cfg-speed").value = cfg.speed;
         document.getElementById("cfg-personality").value = cfg.personality || "";
         renderPersonalityPresets();
+        updateHeaderModel();
     }
 
     function renderPersonalityPresets() {
@@ -544,7 +625,36 @@
     };
 
     window.applySetting = async (key, val) => { cfg[key] = val; await saveCfg(); applyAllSettings(); };
-    window.openSettings = () => { applyAllSettings(); renderMemoryList(); document.getElementById("settings-overlay").classList.add("show"); };
+    window.openSettings = () => { applyAllSettings(); renderMemoryList(); renderModelList(); document.getElementById("settings-overlay").classList.add("show"); };
+
+    function renderModelList() {
+        const box = document.getElementById("model-list");
+        if (!box) return;
+        box.innerHTML = "";
+        MODELS.forEach(m => {
+            const card = document.createElement("div");
+            card.className = "model-card" + (cfg.model === m.id ? " active" : "");
+            card.onclick = async () => { cfg.model = m.id; await saveCfg(); renderModelList(); updateHeaderModel(); };
+            card.innerHTML = `
+                <div class="model-icon">${m.icon}</div>
+                <div class="model-info">
+                    <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
+                        <span class="model-name">${m.name}</span>
+                        <span style="font-size:10px;color:var(--muted);font-weight:400;">${m.maker}</span>
+                    </div>
+                    <div class="model-desc">${m.desc}</div>
+                    <div style="font-size:10.5px;color:var(--muted);margin-top:4px;">🚀 ${m.speed}</div>
+                </div>
+                <span class="model-badge ${m.badgeClass}">${m.badge}</span>`;
+            box.appendChild(card);
+        });
+    }
+
+    function updateHeaderModel() {
+        const m = MODELS.find(m => m.id === cfg.model);
+        const el = document.querySelector(".header-sub");
+        if (el && m) el.textContent = m.name;
+    }
     window.closeSettings = () => { document.getElementById("settings-overlay").classList.remove("show"); };
 
     // MEMORY
@@ -713,7 +823,7 @@
                 if(m.text) c+=m.text; return{role:m.role,content:c.trim()};
             }).filter(m=>m.content&&(Array.isArray(m.content)?m.content.length:m.content.trim())).slice(-8);
 
-            const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mensagens:mensagensAPI,personality:cfg.personality||"",memory:userMemory})});
+            const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mensagens:mensagensAPI,personality:cfg.personality||"",memory:userMemory,model:cfg.model||"llama-3.3-70b-versatile"})});
             const data=await res.json();
             document.getElementById("typing")?.remove();
 
