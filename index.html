@@ -893,10 +893,43 @@
     let currentPreviewCode="",currentPreviewLang="";
     const PREVIEWABLE=["html","svg","javascript","js","css"];
     window.copyCode=(id)=>{const el=document.getElementById(id);if(!el)return;navigator.clipboard.writeText(el.textContent).then(()=>{const btn=el.closest(".code-block")?.querySelector(".code-copy");if(btn){btn.textContent="Copiado!";btn.classList.add("copied");setTimeout(()=>{btn.textContent="Copiar";btn.classList.remove("copied");},2000);}});};
-    window.openPreview=(code,lang)=>{currentPreviewCode=code;currentPreviewLang=lang;document.getElementById("preview-code-content").textContent=code;document.getElementById("preview-lang-badge").textContent=lang;const can=PREVIEWABLE.includes(lang.toLowerCase());document.getElementById("tab-preview").style.display=can?"":"none";document.getElementById("refresh-btn").style.display=can?"":"none";document.getElementById("preview-panel").classList.add("open");document.body.classList.add("panel-open");if(["html","svg"].includes(lang.toLowerCase()))switchPreviewTab("preview");else switchPreviewTab("code");if(window.innerWidth>768)document.getElementById("main").style.marginRight=document.getElementById("preview-panel").offsetWidth+"px";};
+    window.openPreview = function(code, lang) {
+        currentPreviewCode = code;
+        currentPreviewLang = lang;
+        document.getElementById("preview-code-content").textContent = code;
+        document.getElementById("preview-lang-badge").textContent = lang;
+        var can = PREVIEWABLE.includes(lang.toLowerCase());
+        document.getElementById("tab-preview").style.display = can ? "" : "none";
+        document.getElementById("refresh-btn").style.display = can ? "" : "none";
+        document.getElementById("preview-panel").classList.add("open");
+        document.body.classList.add("panel-open");
+        if (["html","svg"].includes(lang.toLowerCase())) {
+            switchPreviewTab("preview");
+        } else {
+            switchPreviewTab("code");
+        }
+        if (window.innerWidth > 768) {
+            document.getElementById("main").style.marginRight = document.getElementById("preview-panel").offsetWidth + "px";
+        }
+    };
     window.closePreview=()=>{document.getElementById("preview-panel").classList.remove("open");document.body.classList.remove("panel-open");document.getElementById("main").style.marginRight="";document.getElementById("preview-iframe").srcdoc="";};
     window.switchPreviewTab=(tab)=>{document.getElementById("tab-code").classList.toggle("active",tab==="code");document.getElementById("tab-preview").classList.toggle("active",tab==="preview");document.getElementById("preview-code-wrap").classList.toggle("active",tab==="code");document.getElementById("preview-iframe-wrap").classList.toggle("active",tab==="preview");if(tab==="preview")renderPreviewIframe();};
-    function renderPreviewIframe(){const iframe=document.getElementById("preview-iframe"),lang=currentPreviewLang.toLowerCase();let html="";if(lang==="html"||lang==="svg")html=currentPreviewCode;else if(lang==="css")html=`<!DOCTYPE html><html><head><style>${currentPreviewCode}</style></head><body><p>CSS aplicado.</p></body></html>`;else if(lang==="javascript"||lang==="js")html=`<!DOCTYPE html><html><head><style>body{font-family:sans-serif;padding:16px;background:#fff;color:#111}</style></head><body><pre id="out"></pre><script>const _l=console.log;console.log=(...a)=>{document.getElementById('out').textContent+=a.join(' ')+'\\n';_l(...a)};try{${currentPreviewCode}}catch(e){document.getElementById('out').textContent='Erro: '+e.message}<\/script></body></html>`;iframe.srcdoc=html;}
+    function renderPreviewIframe() {
+        const iframe = document.getElementById("preview-iframe");
+        const lang = currentPreviewLang.toLowerCase();
+        let html = "";
+        if (lang === "html" || lang === "svg") {
+            html = currentPreviewCode;
+        } else if (lang === "css") {
+            html = "<!DOCTYPE html><html><head><style>" + currentPreviewCode + "</style></head><body><p style='font-family:sans-serif;padding:16px'>CSS Preview</p></body></html>";
+        } else if (lang === "javascript" || lang === "js") {
+            html = "<!DOCTYPE html><html><head><style>body{font-family:monospace;padding:16px;background:#1a1a1a;color:#d4d4d4;white-space:pre-wrap}</style></head><body>" +
+                "<script>var _out=[];var _orig=console.log;console.log=function(){var a=Array.from(arguments).join(' ');_out.push(a);document.body.textContent=_out.join('\n');_orig.apply(console,arguments);};" +
+                "try{" + currentPreviewCode.replace(/`/g, "\`") + "}catch(e){document.body.textContent='Erro: '+e.message;}" +
+                "<\/script></body></html>";
+        }
+        iframe.srcdoc = html;
+    }
     window.refreshPreview=()=>{if(document.getElementById("tab-preview").classList.contains("active"))renderPreviewIframe();};
     window.copyPreviewCode=()=>navigator.clipboard.writeText(currentPreviewCode).then(()=>{const btn=document.querySelector(".preview-tool-btn");btn.textContent="✓ Copiado!";setTimeout(()=>btn.textContent="Copiar código",2000);});
     (()=>{const handle=document.getElementById("resize-handle"),panel=document.getElementById("preview-panel");let dragging=false,startX,startW;handle.addEventListener("mousedown",e=>{dragging=true;startX=e.clientX;startW=panel.offsetWidth;document.body.style.userSelect="none";});document.addEventListener("mousemove",e=>{if(!dragging)return;const newW=Math.min(Math.max(startW+(startX-e.clientX),280),window.innerWidth*.8);panel.style.width=newW+"px";if(window.innerWidth>768)document.getElementById("main").style.marginRight=newW+"px";});document.addEventListener("mouseup",()=>{dragging=false;document.body.style.userSelect="";});})();
