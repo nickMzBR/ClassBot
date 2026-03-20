@@ -683,8 +683,11 @@
         try{
             const mensagensAPI=historico.map(m=>{
                 const imgFiles=m===userMsg?filesSnapshot.filter(f=>f.kind==="image"):[];
-                if(imgFiles.length>0){const parts=[];imgFiles.forEach(f=>parts.push({type:"image_url",image_url:{url:f.dataUrl}}));filesSnapshot.filter(f=>f.kind==="text").forEach(f=>parts.push({type:"text",text:`Ficheiro "${f.name}":\n\`\`\`\n${f.content}\n\`\`\``}));if(text)parts.push({type:"text",text});return{role:"user",content:parts};}
-                let c="";if(m.files?.length)m.files.forEach(f=>{c+=f.kind==="text"&&f.content?`Ficheiro "${f.name}":\n\`\`\`\n${f.content}\n\`\`\`\n`:`[${f.kind==="image"?"Imagem":"Ficheiro"}: ${f.name}]\n`;});
+                const selectedModel=cfg.model||"llama-3.3-70b-versatile";
+                const visionOk=["openai/gpt-oss-120b"].includes(selectedModel);
+                if(imgFiles.length>0&&visionOk){const parts=[];imgFiles.forEach(f=>parts.push({type:"image_url",image_url:{url:f.dataUrl}}));filesSnapshot.filter(f=>f.kind==="text").forEach(f=>parts.push({type:"text",text:"Ficheiro "+f.name+":\n```\n"+f.content+"\n```"}));if(text)parts.push({type:"text",text});return{role:"user",content:parts};}
+                let c="";if(imgFiles.length>0)c+="[Imagem enviada]\n";
+                if(m.files?.length)m.files.forEach(f=>{c+=f.kind==="text"&&f.content?"Ficheiro "+f.name+":\n```\n"+f.content+"\n```\n":"["+( f.kind==="image"?"Imagem":"Ficheiro")+": "+f.name+"]\n";});
                 if(m.text)c+=m.text;return{role:m.role,content:c.trim()};
             }).filter(m=>m.content&&(Array.isArray(m.content)?m.content.length:m.content.trim())).slice(-8);
             const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mensagens:mensagensAPI,personality:cfg.personality||"",memory:userMemory,model:cfg.model||"llama-3.3-70b-versatile"})});
