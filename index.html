@@ -195,6 +195,54 @@
         .badge-vision { background: rgba(251,191,36,0.12); color: #fbbf24; border: 1px solid rgba(251,191,36,0.25); }
         .badge-balance { background: rgba(167,139,250,0.12); color: #a78bfa; border: 1px solid rgba(167,139,250,0.25); }
 
+
+        /* DRAG & DROP */
+        body.dragging-over #main::after {
+            content: 'Soltar ficheiro aqui';
+            position: fixed; inset: 0; z-index: 2000;
+            background: rgba(59,130,246,0.12);
+            border: 2px dashed var(--blue);
+            border-radius: 12px; margin: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; font-weight: 600; color: var(--blue);
+            pointer-events: none;
+        }
+
+        /* ACTION BUTTONS */
+        .msg-actions {
+            display: flex; gap: 5px; margin-top: 6px;
+            opacity: 0; transition: opacity .15s;
+        }
+        .msg-row:hover .msg-actions { opacity: 1; }
+        .action-btn {
+            padding: 4px 10px; border-radius: 6px; font-size: 11px;
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--muted); cursor: pointer; font-family: 'Inter', sans-serif;
+            transition: all .15s; white-space: nowrap;
+        }
+        .action-btn:hover { color: var(--text); border-color: var(--blue); background: var(--blue-dim); }
+
+        /* STREAMING CURSOR */
+        .streaming::after {
+            content: '▋'; color: var(--blue); font-size: 13px;
+            animation: blink-cursor .6s step-end infinite;
+        }
+
+        /* ACTION BUTTONS */
+        .msg-actions {
+            display: flex; gap: 5px; margin-top: 7px;
+            opacity: 0; transition: opacity .15s; flex-wrap: wrap;
+        }
+        .msg-row:hover .msg-actions { opacity: 1; }
+        .action-btn {
+            padding: 4px 10px; border-radius: 6px; font-size: 11px;
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--muted); cursor: pointer; font-family: 'Inter', sans-serif;
+            transition: all .15s; white-space: nowrap;
+        }
+        .action-btn:hover { color: var(--text); border-color: var(--blue); background: var(--blue-dim); }
+        .action-btn:active { transform: scale(.95); }
+
         /* SETTINGS */
         #settings-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 4000; align-items: center; justify-content: center; }
         #settings-overlay.show { display: flex; }
@@ -786,7 +834,7 @@
         } catch{return txt.slice(0,40);}
     }
 
-    window.enviar = async () => {
+    window.enviar = async (regenerate) => {
         if(sending) return;
         const input=document.getElementById("userInput");
         const text=input.value.trim();
@@ -816,25 +864,71 @@
                 const imgFiles=m===userMsg?filesSnapshot.filter(f=>f.kind==="image"):[];
                 if(imgFiles.length>0){
                     const parts=[]; imgFiles.forEach(f=>parts.push({type:"image_url",image_url:{url:f.dataUrl}}));
-                    filesSnapshot.filter(f=>f.kind==="text").forEach(f=>parts.push({type:"text",text:`Ficheiro "${f.name}":\n\`\`\`\n${f.content}\n\`\`\``}));
+                    filesSnapshot.filter(f=>f.kind==="text").forEach(f=>parts.push({type:"text",text:"Ficheiro "+f.name+":\n```\n"+f.content+"\n```"}));
                     if(text) parts.push({type:"text",text}); return{role:"user",content:parts};
                 }
-                let c=""; if(m.files?.length) m.files.forEach(f=>{c+=f.kind==="text"&&f.content?`Ficheiro "${f.name}":\n\`\`\`\n${f.content}\n\`\`\`\n`:`[${f.kind==="image"?"Imagem":"Ficheiro"}: ${f.name}]\n`;});
+                let c=""; if(m.files?.length) m.files.forEach(f=>{c+=f.kind==="text"&&f.content?"Ficheiro "+f.name+":\n```\n"+f.content+"\n```\n":"["+(f.kind==="image"?"Imagem":"Ficheiro")+": "+f.name+"]\n";});
                 if(m.text) c+=m.text; return{role:m.role,content:c.trim()};
             }).filter(m=>m.content&&(Array.isArray(m.content)?m.content.length:m.content.trim())).slice(-8);
 
-            const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mensagens:mensagensAPI,personality:cfg.personality||"",memory:userMemory,model:cfg.model||"llama-3.3-70b-versatile"})});
-            const data=await res.json();
+            // STREAMING
+            const res = await fetch("/api/stream", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ mensagens: mensagensAPI, personality: cfg.personality||"", memory: userMemory, model: cfg.model||"llama-3.3-70b-versatile" })
+            });
+
             document.getElementById("typing")?.remove();
 
-            if(data.answer){
-                addMsgDOM(data.answer,"bot",false);
-                historico.push({role:"assistant",text:data.answer});
-                if(text) extractAndSaveMemory(text,data.answer);
-                const isFirst=historico.filter(m=>m.role==="user").length===1;
-                const title=isFirst?await gerarTitulo(text||filesSnapshot[0]?.name||"Conversa"):null;
-                await set(ref(db,"conversas/"+usuario+"/"+conversaAtivaId),{title:title||null,msgs:historico});
-            } else { addMsgDOM("Sem resposta.","bot",false); }
+            if (!res.ok) { addMsgDOM("Erro na API: " + res.status, "bot", false); throw new Error("API error"); }
+
+            // Create bot message element for streaming
+            const botContent = addMsgDOM("", "bot", false, true);
+            let fullText = "";
+
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder();
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                const chunk = decoder.decode(value, { stream: true });
+                const lines = chunk.split("\n");
+                for (const line of lines) {
+                    if (!line.startsWith("data: ")) continue;
+                    const data = line.slice(6).trim();
+                    if (data === "[DONE]") break;
+                    try {
+                        const parsed = JSON.parse(data);
+                        const delta = parsed.choices?.[0]?.delta?.content || "";
+                        if (delta) {
+                            fullText += delta;
+                            // Update display every chunk
+                            botContent.classList.add("streaming");
+                            botContent.textContent = fullText;
+                            scrollBottom();
+                        }
+                    } catch(e) {}
+                }
+            }
+
+            // Remove thinking blocks, render markdown
+            fullText = fullText.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+            botContent.classList.remove("streaming");
+            if (cfg.markdown) {
+                botContent.innerHTML = marked.parse(fullText);
+            } else {
+                botContent.textContent = fullText;
+            }
+            playSound();
+            scrollBottom();
+
+            historico.push({role:"assistant",text:fullText});
+            if(text) extractAndSaveMemory(text,fullText);
+            const isFirst=historico.filter(m=>m.role==="user").length===1;
+            const title=isFirst?await gerarTitulo(text||filesSnapshot[0]?.name||"Conversa"):null;
+            await set(ref(db,"conversas/"+usuario+"/"+conversaAtivaId),{title:title||null,msgs:historico});
+
         } catch(e) { document.getElementById("typing")?.remove(); addMsgDOM("Erro: "+e.message,"bot",false); }
 
         sending=false;
@@ -871,16 +965,123 @@
     window.resizeInput=(el)=>{el.style.height="auto";el.style.height=Math.min(el.scrollHeight,110)+"px";};
     window.keyHandler=(e)=>{if(e.key==="Enter"){if(cfg.enter&&!e.shiftKey){e.preventDefault();enviar();}else if(!cfg.enter&&e.ctrlKey){e.preventDefault();enviar();}}};
 
-    function addMsgDOM(txt,role,loading){
-        const c=document.getElementById("messages"),d=document.createElement("div");d.className="msg-row";
-        const header=document.createElement("div");header.className="msg-header";
-        const label=document.createElement("div");label.className="msg-label"+(role==="bot"?" bot":"");label.textContent=role==="user"?"Você":"Prisma";header.appendChild(label);
-        if(role==="bot"&&!loading){const cpBtn=document.createElement("button");cpBtn.className="copy-btn";cpBtn.innerHTML=`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copiar`;cpBtn.onclick=()=>navigator.clipboard.writeText(txt).then(()=>{cpBtn.textContent="✓ Copiado";cpBtn.classList.add("copied");setTimeout(()=>{cpBtn.innerHTML=`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copiar`;cpBtn.classList.remove("copied");},2000);});header.appendChild(cpBtn);}
-        const content=document.createElement("div");content.className="msg-content"+(role==="user"?" user-bubble":"");
-        if(loading){content.innerHTML='<div class="typing-dots"><span></span><span></span><span></span></div>';}
-        else if(role==="bot"){digitarTexto(content,txt);}
-        else{content.textContent=txt;}
-        d.appendChild(header);d.appendChild(content);c.appendChild(d);scrollBottom();return content;
+    function addMsgDOM(txt, role, loading, streaming) {
+        const c = document.getElementById("messages");
+        const d = document.createElement("div"); d.className = "msg-row";
+        const header = document.createElement("div"); header.className = "msg-header";
+        const label = document.createElement("div");
+        label.className = "msg-label" + (role === "bot" ? " bot" : "");
+        label.textContent = role === "user" ? "Você" : "Prisma";
+        header.appendChild(label);
+
+        if (role === "bot" && !loading && !streaming) {
+            const cpBtn = document.createElement("button"); cpBtn.className = "copy-btn";
+            cpBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copiar`;
+            cpBtn.onclick = () => navigator.clipboard.writeText(txt).then(() => {
+                cpBtn.textContent = "✓ Copiado"; cpBtn.classList.add("copied");
+                setTimeout(() => { cpBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copiar`; cpBtn.classList.remove("copied"); }, 2000);
+            });
+            header.appendChild(cpBtn);
+        }
+
+        const content = document.createElement("div");
+        content.className = "msg-content" + (role === "user" ? " user-bubble" : "");
+
+        if (loading) {
+            content.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+        } else if (streaming) {
+            content.textContent = "";
+        } else if (role === "bot") {
+            digitarTexto(content, txt);
+        } else {
+            content.textContent = txt;
+        }
+
+        d.appendChild(header);
+        d.appendChild(content);
+
+        // Action buttons for bot messages
+        if (role === "bot" && !loading && !streaming) {
+            const actions = document.createElement("div");
+            actions.className = "msg-actions";
+            const actionsData = [
+                { label: "✦ Resumir", prompt: "Resume a seguinte resposta em 2-3 frases:
+
+" },
+                { label: "🌐 Traduzir", prompt: "Traduza a seguinte resposta para inglês:
+
+" },
+                { label: "💡 Explicar melhor", prompt: "Explica a seguinte resposta de forma mais simples e detalhada:
+
+" },
+                { label: "⟳ Regenerar", prompt: null },
+            ];
+            actionsData.forEach(a => {
+                const btn = document.createElement("button");
+                btn.className = "action-btn";
+                btn.textContent = a.label;
+                btn.onclick = () => {
+                    if (a.prompt === null) {
+                        // Regenerar — remove last bot message and resend
+                        const rows = document.querySelectorAll(".msg-row");
+                        rows[rows.length - 1].remove();
+                        historico.pop();
+                        enviar(true);
+                    } else {
+                        document.getElementById("userInput").value = a.prompt + txt;
+                        resizeInput(document.getElementById("userInput"));
+                        document.getElementById("userInput").focus();
+                    }
+                };
+                actions.appendChild(btn);
+            });
+            d.appendChild(actions);
+        }
+
+        // Action buttons for bot messages (not loading/streaming)
+        if (role === "bot" && !loading && !streaming && txt) {
+            const actions = document.createElement("div");
+            actions.className = "msg-actions";
+
+            const btns = [
+                { icon: "◈", label: "Resumir", prompt: "Resume a seguinte resposta em 2-3 frases curtas:
+
+" + txt },
+                { icon: "🌐", label: "Traduzir", prompt: "Traduza a seguinte resposta para inglês:
+
+" + txt },
+                { icon: "💡", label: "Explicar", prompt: "Explica a seguinte resposta de forma mais simples e detalhada:
+
+" + txt },
+                { icon: "⟳", label: "Regenerar", prompt: null },
+            ];
+
+            btns.forEach(b => {
+                const btn = document.createElement("button");
+                btn.className = "action-btn";
+                btn.textContent = b.icon + " " + b.label;
+                btn.onclick = () => {
+                    if (b.prompt === null) {
+                        // Regenerar: remove last bot message from DOM and history, resend
+                        const allRows = document.querySelectorAll(".msg-row");
+                        allRows[allRows.length - 1].remove();
+                        historico.pop();
+                        enviar();
+                    } else {
+                        const inp = document.getElementById("userInput");
+                        inp.value = b.prompt;
+                        resizeInput(inp);
+                        inp.focus();
+                    }
+                };
+                actions.appendChild(btn);
+            });
+
+            d.appendChild(actions);
+        }
+
+        c.appendChild(d); scrollBottom();
+        return content;
     }
 
     function addImageMsgDOM(src,name,role){const c=document.getElementById("messages"),d=document.createElement("div");d.className="msg-row";const h=document.createElement("div");h.className="msg-header";const l=document.createElement("div");l.className="msg-label"+(role==="bot"?" bot":"");l.textContent=role==="user"?"Você":"Prisma";h.appendChild(l);const img=document.createElement("img");img.className="msg-img";img.src=src;img.alt=name;img.onclick=()=>{document.getElementById("modal-img").src=src;document.getElementById("img-modal").classList.add("show");};d.appendChild(h);d.appendChild(img);c.appendChild(d);scrollBottom();}
@@ -933,6 +1134,32 @@
     window.refreshPreview=()=>{if(document.getElementById("tab-preview").classList.contains("active"))renderPreviewIframe();};
     window.copyPreviewCode=()=>navigator.clipboard.writeText(currentPreviewCode).then(()=>{const btn=document.querySelector(".preview-tool-btn");btn.textContent="✓ Copiado!";setTimeout(()=>btn.textContent="Copiar código",2000);});
     (()=>{const handle=document.getElementById("resize-handle"),panel=document.getElementById("preview-panel");let dragging=false,startX,startW;handle.addEventListener("mousedown",e=>{dragging=true;startX=e.clientX;startW=panel.offsetWidth;document.body.style.userSelect="none";});document.addEventListener("mousemove",e=>{if(!dragging)return;const newW=Math.min(Math.max(startW+(startX-e.clientX),280),window.innerWidth*.8);panel.style.width=newW+"px";if(window.innerWidth>768)document.getElementById("main").style.marginRight=newW+"px";});document.addEventListener("mouseup",()=>{dragging=false;document.body.style.userSelect="";});})();
+
+
+    // DRAG & DROP
+    const mainEl = document.getElementById("main");
+    mainEl.addEventListener("dragover", e => { e.preventDefault(); document.body.classList.add("dragging-over"); });
+    mainEl.addEventListener("dragleave", e => { if (!e.relatedTarget || !mainEl.contains(e.relatedTarget)) document.body.classList.remove("dragging-over"); });
+    mainEl.addEventListener("drop", e => {
+        e.preventDefault();
+        document.body.classList.remove("dragging-over");
+        const files = Array.from(e.dataTransfer.files);
+        if (!files.length) return;
+        files.forEach(file => {
+            const ext = "." + file.name.split(".").pop().toLowerCase();
+            const reader = new FileReader();
+            if (file.type.startsWith("image/")) {
+                reader.onload = ev => { pendingFiles.push({ name: file.name, type: file.type, dataUrl: ev.target.result, kind: "image" }); renderAttachPreview(); };
+                reader.readAsDataURL(file);
+            } else if (TEXT_EXTS.includes(ext)) {
+                reader.onload = ev => { pendingFiles.push({ name: file.name, type: file.type, content: ev.target.result, kind: "text" }); renderAttachPreview(); };
+                reader.readAsText(file);
+            } else {
+                reader.onload = ev => { pendingFiles.push({ name: file.name, type: file.type, dataUrl: ev.target.result, kind: "binary" }); renderAttachPreview(); };
+                reader.readAsDataURL(file);
+            }
+        });
+    });
 
     // INIT
     async function init() {
