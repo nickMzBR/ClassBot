@@ -63,6 +63,14 @@ export default async function handler(req, res) {
                 "Content-Type": "application/json",
                 "Authorization": "Bearer " + chave
             },
+            // Max output tokens per model
+            const maxTokens = {
+                "openai/gpt-oss-120b": 65536,
+                "openai/gpt-oss-20b": 65536,
+                "llama-3.3-70b-versatile": 32768,
+                "llama-3.1-8b-instant": 131072,
+            };
+
             body: JSON.stringify({
                 model: selectedModel,
                 messages: [
@@ -71,7 +79,7 @@ export default async function handler(req, res) {
                 ],
                 temperature: 0.5,
                 top_p: 1,
-                max_tokens: 8000
+                max_tokens: maxTokens[selectedModel] || 8000
             })
         });
 
